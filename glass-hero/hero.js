@@ -408,10 +408,10 @@
      five photographs of this car is showing. */
   const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
   const SHADE_SRC = {
-    70: 'assets/ext-70.png',
-    35: 'assets/ext-35.png',
-    20: 'assets/ext-20.png',
-    5: 'assets/ext-5.png',
+    70: 'assets/ext-70.webp',
+    35: 'assets/ext-35.webp',
+    20: 'assets/ext-20.webp',
+    5: 'assets/ext-5.webp',
   };
 
   const specLine = document.querySelector('.spec-line');
@@ -433,7 +433,7 @@
     shadeVeil.style.opacity = SHADE_DIM[shadeState.vlt];
     if (extTop) {
       /* Split is its own photograph: front door light, rear door black. */
-      const src = shadeState.style === 'split' ? 'assets/ext-split.png' : SHADE_SRC[shadeState.vlt];
+      const src = shadeState.style === 'split' ? 'assets/ext-split.webp' : SHADE_SRC[shadeState.vlt];
       if (!extTop.src.endsWith(src)) extTop.src = src;
       extTop.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
       extTop.style.opacity = shadeState.vlt === '70' && shadeState.style !== 'split' ? 0 : 1;
