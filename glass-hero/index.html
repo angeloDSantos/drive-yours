@@ -23,6 +23,50 @@
     </nav>
   </header>
 
+  <!-- The window itself, traced from the cabin photograph: near-vertical
+       B-pillar, gently arching roofline, long C-pillar sweep to a rounded
+       rear corner, straight beltline. Everything that has to be window
+       shaped references this one path. -->
+  <svg class="geo" aria-hidden="true" width="0" height="0">
+    <defs>
+      <path id="win" d="M 0 438 L 0 12 C 0 5 8 1 42 1 C 160 0 292 1 382 6 C 562 16 762 48 902 100 C 1012 141 1094 208 1142 282 C 1170 326 1188 360 1192 396 C 1195 415 1186 426 1166 427 L 30 438 Z" />
+      <clipPath id="winClip" clipPathUnits="objectBoundingBox">
+        <path d="M 0 1 L 0 0.0274 C 0 0.0114 0.0067 0.0023 0.0351 0.0023 C 0.1338 0 0.2441 0.0023 0.3194 0.0137 C 0.4699 0.0365 0.6371 0.1096 0.7542 0.2283 C 0.8462 0.3219 0.9147 0.4749 0.9548 0.6438 C 0.9783 0.7443 0.99 0.8219 0.9967 0.9041 C 0.9992 0.9475 0.9883 0.9726 0.9749 0.9749 L 0.0251 1 Z" />
+      </clipPath>
+      <linearGradient id="g-glass" x1="0" y1="0" x2="0.7" y2="1">
+        <stop offset="0" stop-color="rgba(196,226,214,0.16)" />
+        <stop offset="0.42" stop-color="rgba(150,190,178,0.05)" />
+        <stop offset="1" stop-color="rgba(128,168,158,0.09)" />
+      </linearGradient>
+      <linearGradient id="g-pvb" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stop-color="rgba(238,234,224,0.13)" />
+        <stop offset="1" stop-color="rgba(224,220,208,0.05)" />
+      </linearGradient>
+      <linearGradient id="g-adhesive" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="rgba(255,255,255,0.07)" />
+        <stop offset="0.5" stop-color="rgba(214,216,210,0.015)" />
+        <stop offset="1" stop-color="rgba(255,255,255,0.05)" />
+      </linearGradient>
+      <linearGradient id="g-ceramic" x1="0" y1="0" x2="0.9" y2="1">
+        <stop offset="0" stop-color="rgba(30,36,52,0.95)" />
+        <stop offset="0.45" stop-color="rgba(12,13,16,0.94)" />
+        <stop offset="1" stop-color="rgba(26,20,14,0.94)" />
+      </linearGradient>
+      <linearGradient id="g-pet" x1="0" y1="0" x2="1" y2="0.6">
+        <stop offset="0" stop-color="rgba(120,210,220,0.10)" />
+        <stop offset="0.3" stop-color="rgba(150,130,220,0.09)" />
+        <stop offset="0.55" stop-color="rgba(220,140,180,0.08)" />
+        <stop offset="0.8" stop-color="rgba(230,190,120,0.09)" />
+        <stop offset="1" stop-color="rgba(120,210,220,0.06)" />
+      </linearGradient>
+      <linearGradient id="g-hardcoat" x1="0" y1="0" x2="0.6" y2="1">
+        <stop offset="0" stop-color="rgba(255,255,255,0.14)" />
+        <stop offset="0.25" stop-color="rgba(255,255,255,0.02)" />
+        <stop offset="1" stop-color="rgba(255,255,255,0.05)" />
+      </linearGradient>
+    </defs>
+  </svg>
+
   <main id="top">
     <!-- The whole site is this one scroll track. -->
     <section class="hero-track" aria-label="The glass, taken apart">
@@ -65,19 +109,19 @@
           <p class="rail-side">Cabin side</p>
         </aside>
 
-        <!-- The 3D scene: one pane, seven planes -->
+        <!-- The 3D scene: one pane, seven sheets, each cut to the window. -->
         <div class="scene" aria-hidden="true">
           <div class="pane">
-            <div class="layer l-glass" data-layer="0">
-              <span class="sheen" aria-hidden="true"></span>
-              <span class="etch">LAMINATED · AS2 · 43R</span>
-            </div>
-            <div class="layer l-pvb" data-layer="1"></div>
-            <div class="layer l-glass l-glass-inner" data-layer="2"></div>
-            <div class="layer l-adhesive" data-layer="3"></div>
-            <div class="layer l-ceramic" data-layer="4"></div>
-            <div class="layer l-pet" data-layer="5"></div>
-            <div class="layer l-hardcoat" data-layer="6"></div>
+            <svg class="layer l-glass" data-layer="0" viewBox="0 0 1196 438" preserveAspectRatio="none">
+              <use href="#win" />
+              <text class="etch" x="52" y="392">LAMINATED · AS2 · 43R</text>
+            </svg>
+            <svg class="layer l-pvb" data-layer="1" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="layer l-glass l-glass-inner" data-layer="2" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="layer l-adhesive" data-layer="3" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="layer l-ceramic" data-layer="4" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="layer l-pet" data-layer="5" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="layer l-hardcoat" data-layer="6" viewBox="0 0 1196 438" preserveAspectRatio="none"><use href="#win" /></svg>
           </div>
         </div>
 
@@ -101,7 +145,7 @@
           <p class="body">The view out stays clean. Ceramic works on heat and glare rather than clarity, so the skyline at night is still the skyline.</p>
         </div>
         <figure class="story-media">
-          <img src="assets/saloon-exterior-rain.png" alt="The car from the street in the rain: the glass returns the city's light and gives nothing back" loading="lazy" width="1672" height="941" />
+          <img src="assets/ext-5.png" alt="The car from the promenade at night: the glass returns the city's light and gives nothing back" loading="lazy" width="1672" height="941" />
         </figure>
       </div>
     </section>
@@ -133,12 +177,13 @@
               <span class="shade-label">VLT 5</span>
               <span class="glass-mark">D Y</span>
             </div>
+            <!-- The street side is not drawn at all: five photographs of the
+                 same car, identical but for the glass, crossfaded. Nothing
+                 to trace, so nothing can misalign. -->
             <div class="shade-out">
-              <img src="assets/saloon-doors-rain.png" alt="" loading="lazy" />
-              <div class="shade-out-veil v-main" data-style="full"></div>
-              <div class="shade-out-veil v-front" data-style="full"></div>
+              <img class="ext-base" src="assets/ext-70.png" alt="" loading="lazy" width="1672" height="941" />
+              <img class="ext-top" src="assets/ext-5.png" alt="" loading="lazy" width="1672" height="941" />
               <span class="shade-tag">From the street</span>
-              <span class="glass-mark glass-mark-out">D Y</span>
             </div>
           </div>
 

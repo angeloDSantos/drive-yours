@@ -17,7 +17,6 @@
   const glow = document.querySelector('.stage-glow');
   const bgImg = document.querySelector('.stage-bg img');
   const veil = document.querySelector('.stage-veil');
-  const sheen = document.querySelector('.sheen');
   const aperGlow = document.querySelector('.aperture-glow');
   const etch = document.querySelector('.etch');
   const bokeh = document.querySelector('.bokeh-live');
@@ -26,7 +25,9 @@
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
   const IMG = { w: 1672, h: 941 };
-  const APERTURE = { x: 288, y: 170, w: 1104, h: 410 };
+  /* traced from the plate: B-pillar at x306, roofline at y154, rear sweep
+     out to x1502, beltline at y592 */
+  const APERTURE = { x: 306, y: 154, w: 1196, h: 438 };
 
   function apertureRect() {
     const W = stage.clientWidth;
@@ -154,7 +155,7 @@
     const ry = (onPhone ? -50 : -60) * study;
     const rx = (5 + 6 * study) * study - 9 * peel;
     const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop * seatHold;
-    const shiftX = seatX * (1 - study) + ((onPhone ? 32 : 70) + fanEase * (onPhone ? 132 : 150)) * study;
+    const shiftX = seatX * (1 - study) + ((onPhone ? 54 : 70) + fanEase * (onPhone ? 150 : 150)) * study;
     const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
@@ -186,10 +187,6 @@
       windowHold.style.backgroundSize = `${(IMG.w * s * k).toFixed(1)}px ${(IMG.h * s * k).toFixed(1)}px`;
       windowHold.style.backgroundPosition = `${(bx - left).toFixed(1)}px ${(by - top).toFixed(1)}px`;
       windowHold.style.opacity = (fadeWorld * (1 - release)).toFixed(3);
-    }
-    if (sheen) {
-      sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
-      sheen.style.opacity = (0.35 + 0.65 * study).toFixed(3);
     }
     if (etch) etch.style.opacity = study.toFixed(3);
     if (aperGlow) {
@@ -348,16 +345,20 @@
 
   /* Tap a depth, the window answers. */
   const shadeVeil = document.querySelector('.shade-veil');
-  const outMain = document.querySelector('.shade-out-veil.v-main');
-  const outFront = document.querySelector('.shade-out-veil.v-front');
+  const extTop = document.querySelector('.ext-top');
   const shadeNote = document.querySelector('.shade-note');
   const shadeLabel = document.querySelector('.shade-label');
   const marks = [...document.querySelectorAll('.glass-mark')];
 
-  /* Inside: how much of the city the tint gives up.
-     Outside: how much of you the street gets back. */
+  /* Inside: how much of the city the tint gives up. Outside: which of the
+     five photographs of this car is showing. */
   const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
-  const SHADE_OUT = { 70: 0.12, 35: 0.42, 20: 0.62, 5: 0.88 };
+  const SHADE_SRC = {
+    70: 'assets/ext-70.png',
+    35: 'assets/ext-35.png',
+    20: 'assets/ext-20.png',
+    5: 'assets/ext-5.png',
+  };
 
   const specLine = document.querySelector('.spec-line');
   const saveBtn = document.querySelector('.shade-save');
@@ -373,13 +374,16 @@
   }
 
   function renderShade() {
-    shadeVeil.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
-    outMain.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
-    outFront.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
+    const flat = shadeState.style === 'split' ? 'full' : shadeState.style;
+    shadeVeil.dataset.style = flat;
     shadeVeil.style.opacity = SHADE_DIM[shadeState.vlt];
-    outMain.style.opacity = SHADE_OUT[shadeState.vlt];
-    /* Split keeps the front doors a legal step lighter than the cabin. */
-    outFront.style.opacity = shadeState.style === 'split' ? 0.18 : SHADE_OUT[shadeState.vlt];
+    if (extTop) {
+      /* Split is its own photograph: front door light, rear door black. */
+      const src = shadeState.style === 'split' ? 'assets/ext-split.png' : SHADE_SRC[shadeState.vlt];
+      if (!extTop.src.endsWith(src)) extTop.src = src;
+      extTop.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
+      extTop.style.opacity = shadeState.vlt === '70' && shadeState.style !== 'split' ? 0 : 1;
+    }
     marks.forEach((m) => m.classList.toggle('is-on', shadeState.mark));
     const styleTag = shadeState.style === 'full' ? '' : ` · ${shadeState.style.toUpperCase()}`;
     shadeLabel.textContent = `VLT ${shadeState.vlt}${styleTag}`;
