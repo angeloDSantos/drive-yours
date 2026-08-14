@@ -74,9 +74,42 @@ a { color: inherit; text-decoration: none; }
   isolation: isolate;
 }
 
-.stage-glow {
+/* The cabin plate: the night city seen through the real coach-door window.
+   The pane starts seated in this photo's aperture and lifts out of it. */
+.stage-bg {
   position: absolute;
   z-index: 0;
+  inset: 0;
+  overflow: clip;
+}
+.stage-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  filter: saturate(0.78) contrast(1.05);
+  transform-origin: 50% 40%;
+}
+.stage-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(4, 5, 5, 0.72) 0%, rgba(5, 6, 6, 0.32) 34%, rgba(5, 6, 6, 0.12) 60%, rgba(4, 5, 5, 0.4) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.14) 34%, rgba(0, 0, 0, 0.66) 100%);
+}
+.stage-veil {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: #070808;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stage-glow {
+  position: absolute;
+  z-index: 2;
   inset: 0;
   opacity: 0;
   background:
@@ -193,16 +226,31 @@ a { color: inherit; text-decoration: none; }
 }
 .pane {
   position: relative;
-  width: min(58vw, 640px);
-  aspect-ratio: 1.42 / 0.98;
+  width: min(60vw, 820px);
+  /* the real coach-door aperture in the plate, 1093 x 420 */
+  aspect-ratio: 2.6 / 1;
   transform-style: preserve-3d;
 }
 .layer {
   position: absolute;
   inset: 0;
-  border-radius: 10px;
+  border-radius: 22px;
   transform-style: preserve-3d;
   backface-visibility: visible;
+}
+/* City light drifting across the outer ply, driven by scroll. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: clip;
+  background: linear-gradient(104deg,
+    transparent 0%, transparent 34%,
+    rgba(255, 255, 255, 0.075) 46%, rgba(255, 255, 255, 0.02) 52%,
+    transparent 62%, transparent 76%,
+    rgba(255, 255, 255, 0.04) 84%, transparent 92%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
 }
 
 /* Materials. Each layer is fill + 1px edge + a diagonal light sweep.

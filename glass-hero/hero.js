@@ -5,6 +5,7 @@
   'use strict';
 
   const track = document.querySelector('.hero-track');
+  const stage = document.querySelector('.hero-stage');
   const pane = document.querySelector('.pane');
   const layers = [...document.querySelectorAll('.layer')];
   const railRows = [...document.querySelectorAll('.rail-list li')];
@@ -14,6 +15,28 @@
   const spec = document.querySelector('.spec');
   const hint = document.querySelector('.scroll-hint');
   const glow = document.querySelector('.stage-glow');
+  const bgImg = document.querySelector('.stage-bg img');
+  const veil = document.querySelector('.stage-veil');
+  const sheen = document.querySelector('.sheen');
+
+  /* The coach-door aperture inside the cabin plate, in the photo's own
+     pixels. The pane is seated exactly here at the top of the page. */
+  const IMG = { w: 1672, h: 941 };
+  const APERTURE = { x: 339, y: 157, w: 1093, h: 420 };
+
+  function apertureRect() {
+    const W = stage.clientWidth;
+    const H = stage.clientHeight;
+    const s = Math.max(W / IMG.w, H / IMG.h);
+    /* mirrors object-fit: cover at object-position 50% 42% */
+    const ox = (W - IMG.w * s) * 0.5;
+    const oy = (H - IMG.h * s) * 0.42;
+    return {
+      cx: ox + (APERTURE.x + APERTURE.w / 2) * s,
+      cy: oy + (APERTURE.y + APERTURE.h / 2) * s,
+      w: APERTURE.w * s,
+    };
+  }
 
   /* Street side -> cabin side. Spread is each layer's share of the fan
      depth, taken from the physical stack (films sit tighter than glass). */
@@ -42,33 +65,47 @@
     const fanDepth = onPhone ? 165 : 300;
 
     /* Phases */
-    const tilt = easeInOut(ramp(p, 0.12, 0.3));
-    const fan = ramp(p, 0.26, 0.78);
+    const lift = easeInOut(ramp(p, 0.08, 0.3));   /* out of the aperture */
+    const tilt = easeInOut(ramp(p, 0.14, 0.34));
+    const fan = ramp(p, 0.28, 0.78);
     const openFade = 1 - ramp(p, 0.14, 0.26);
-    const railIn = ramp(p, 0.24, 0.34);
+    const railIn = ramp(p, 0.26, 0.36);
     const closeIn = ramp(p, 0.84, 0.94);
 
-    /* The pane turns from near-flat to a three-quarter view. The fan
-       spreads towards the viewer's left, so the group follows it right
-       and down to stay framed between the copy and the rail. */
-    const ry = onPhone ? -14 - 36 * tilt : -16 - 44 * tilt;
-    const rx = 5 + 6 * tilt;
-    const scale = 1 - 0.12 * tilt;
+    /* The pane starts seated in the photo's window, then comes off it,
+       turns to a three-quarter view and fans. The fan spreads towards the
+       viewer's left, so the group follows it right and down. */
+    const a = apertureRect();
+    const seatScale = a.w / pane.offsetWidth;
+    const seatX = a.cx - stage.clientWidth / 2;
+    const seatY = a.cy - stage.clientHeight / 2;
+
+    const ry = (onPhone ? -14 - 36 * tilt : -16 - 44 * tilt) * lift;
+    const rx = (5 + 6 * tilt) * lift;
+    const scale = seatScale + (1 - 0.12 * tilt - seatScale) * lift;
     const fanEase = easeInOut(fan);
-    const shiftX = (onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150);
-    const shiftY = fanEase * (onPhone ? 36 : 22);
+    const shiftX = seatX * (1 - lift) + ((onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150)) * lift;
+    const shiftY = seatY * (1 - lift) + fanEase * (onPhone ? 36 : 22) * lift;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
-      `rotateX(${rx}deg) rotateY(${ry}deg) scale(${scale})`;
+      `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    /* Each layer leaves in street-to-cabin order. The close-card dim is set
-       per layer: opacity on the preserve-3d parent would flatten the scene
-       and collapse the fan. */
-    const dim = (1 - closeIn * 0.3).toFixed(3);
+    /* The cabin recedes as the pane comes away. */
+    bgImg.style.transform = `scale(${(1.03 + 0.07 * lift).toFixed(4)})`;
+    veil.style.opacity = Math.min(0.92, 0.3 * lift + 0.34 * fanEase + 0.3 * closeIn).toFixed(3);
+    if (sheen) sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
+
+    /* Each layer leaves in street-to-cabin order. Seated, the stack must
+       read as one near-black pane of privacy glass, so every film except
+       the ceramic only fades in as the pane lifts. The close-card dim is
+       also set per layer: opacity on the preserve-3d parent would flatten
+       the scene and collapse the fan. */
+    const dim = 1 - closeIn * 0.3;
     for (let i = 0; i < layers.length; i++) {
       const lp = easeOut(ramp(fan, i * 0.055, i * 0.055 + 0.6));
       layers[i].style.transform = `translateZ(${(lp * SPREAD[i] * fanDepth).toFixed(2)}px)`;
-      layers[i].style.opacity = dim;
+      const material = i === 4 ? 1 : 0.22 + 0.78 * lift;
+      layers[i].style.opacity = (material * dim).toFixed(3);
       const on = lp > 0.5;
       if (railRows[i]) railRows[i].classList.toggle('is-on', on);
     }
