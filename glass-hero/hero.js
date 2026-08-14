@@ -146,7 +146,20 @@
 
     const bgScale = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
     bgImg.style.transform = bgScale;
-    if (bgVid) bgVid.style.transform = bgScale;
+    if (bgVid) {
+      bgVid.style.transform = bgScale;
+      /* The loop is only ever seen through the glass: clipped to the
+         aperture so the interior stays the crisp still, and the video's
+         compression hides inside bokeh that was soft to begin with. */
+      const g = apertureRect();
+      const gw = g.w;
+      const gh = g.w * (APERTURE.h / APERTURE.w);
+      const top = g.cy - gh / 2;
+      const left = g.cx - gw / 2;
+      bgVid.style.clipPath =
+        `inset(${top.toFixed(1)}px ${(stage.clientWidth - left - gw).toFixed(1)}px ` +
+        `${(stage.clientHeight - top - gh).toFixed(1)}px ${left.toFixed(1)}px round 24px)`;
+    }
     veil.style.opacity = fadeWorld.toFixed(3);
     if (sheen) {
       sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
