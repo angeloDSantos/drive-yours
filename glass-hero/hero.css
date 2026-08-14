@@ -237,9 +237,9 @@ a { color: inherit; text-decoration: none; }
 }
 .pane {
   position: relative;
-  width: min(60vw, 820px);
-  /* the real coach-door aperture in the plate, 1093 x 420 */
-  aspect-ratio: 2.6 / 1;
+  width: min(62vw, 880px);
+  /* the real coach-door aperture in the plate, 1162 x 320 */
+  aspect-ratio: 3.63 / 1;
   transform-style: preserve-3d;
 }
 .layer {

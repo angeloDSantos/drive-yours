@@ -24,7 +24,7 @@
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
   const IMG = { w: 1672, h: 941 };
-  const APERTURE = { x: 339, y: 157, w: 1093, h: 420 };
+  const APERTURE = { x: 224, y: 188, w: 1227, h: 340 };
 
   function apertureRect() {
     const W = stage.clientWidth;
@@ -97,7 +97,7 @@
     const ry = (onPhone ? -50 : -60) * study;
     const rx = (5 + 6 * study) * study - 9 * peel;
     const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop * seatHold;
-    const shiftX = seatX * (1 - study) + ((onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150)) * study;
+    const shiftX = seatX * (1 - study) + ((onPhone ? 32 : 70) + fanEase * (onPhone ? 132 : 150)) * study;
     const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
