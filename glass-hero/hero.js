@@ -320,8 +320,18 @@
   const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
   const SHADE_OUT = { 70: 0.12, 35: 0.42, 20: 0.62, 5: 0.88 };
 
+  const specLine = document.querySelector('.spec-line');
+  const saveBtn = document.querySelector('.shade-save');
+  const sendLink = document.querySelector('.shade-send');
+
   const shadeState = { vlt: '5', style: 'full', mark: false };
   const shadeNotes = { vlt: 'The executive depth. From outside the cabin simply is not there.', style: '', mark: '' };
+
+  const STYLE_NAME = { full: 'Full', fade: 'Fade', visor: 'Visor', split: 'Split' };
+
+  function specText() {
+    return `VLT ${shadeState.vlt} · ${STYLE_NAME[shadeState.style]}${shadeState.mark ? ' · DY etch' : ''}`;
+  }
 
   function renderShade() {
     shadeVeil.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
@@ -335,6 +345,19 @@
     const styleTag = shadeState.style === 'full' ? '' : ` · ${shadeState.style.toUpperCase()}`;
     shadeLabel.textContent = `VLT ${shadeState.vlt}${styleTag}`;
     shadeNote.textContent = [shadeNotes.vlt, shadeNotes.style, shadeNotes.mark].filter(Boolean).join(' ');
+    if (specLine) specLine.textContent = specText();
+    if (sendLink) {
+      const body = `Hello,%0A%0AMy spec: ${encodeURIComponent(specText())}%0AVehicle:%0APostcode:%0A%0AThanks`;
+      sendLink.href = `mailto:studio@driveyours.example?subject=${encodeURIComponent('My Drive Yours spec')}&body=${body}`;
+    }
+  }
+
+  function setActive(row, attr, value) {
+    [...row.querySelectorAll('.shade-btn')].forEach((b) => {
+      const hit = b.dataset[attr] === value;
+      b.classList.toggle('is-active', hit);
+      if (hit && b.dataset.note !== undefined) shadeNotes[attr === 'mark' ? 'mark' : attr] = b.dataset.note;
+    });
   }
 
   document.querySelectorAll('.shade-row').forEach((row) => {
@@ -349,4 +372,30 @@
       });
     });
   });
+
+  /* The spec survives the visit: saved on demand, restored on return. */
+  try {
+    const saved = JSON.parse(localStorage.getItem('dy-spec') || 'null');
+    if (saved && SHADE_DIM[saved.vlt] && STYLE_NAME[saved.style]) {
+      Object.assign(shadeState, { vlt: saved.vlt, style: saved.style, mark: !!saved.mark });
+      document.querySelectorAll('.shade-row').forEach((row) => {
+        if (row.querySelector('[data-vlt]')) setActive(row, 'vlt', shadeState.vlt);
+        else if (row.querySelector('[data-style]')) setActive(row, 'style', shadeState.style);
+        else setActive(row, 'mark', shadeState.mark ? 'on' : 'off');
+      });
+    }
+  } catch { /* private mode: the default spec stands */ }
+  renderShade();
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      try {
+        localStorage.setItem('dy-spec', JSON.stringify(shadeState));
+        saveBtn.textContent = 'Saved to this browser';
+      } catch {
+        saveBtn.textContent = 'Could not save here';
+      }
+      setTimeout(() => { saveBtn.textContent = 'Save spec'; }, 1800);
+    });
+  }
 })();
