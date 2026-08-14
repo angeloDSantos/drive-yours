@@ -81,6 +81,21 @@
   if (bgImg.complete) seedBokeh();
   else bgImg.addEventListener('load', seedBokeh, { once: true });
 
+  /* Rain on the glass: thin streaks sliding down inside the aperture,
+     drawn on the same canvas so they can never drift off the window. */
+  const drops = [];
+  for (let i = 0; i < 42; i++) {
+    drops.push({
+      x: Math.random(),
+      y: Math.random(),
+      v: 0.16 + Math.random() * 0.22,
+      len: 0.03 + Math.random() * 0.05,
+      a: 0.05 + Math.random() * 0.12,
+      w: 0.8 + Math.random() * 0.8,
+    });
+  }
+  let rainClock = 0;
+
   /* Street side -> cabin side. Spread is each layer's share of the fan
      depth, taken from the physical stack (films sit tighter than glass). */
   const SPREAD = [1.86, 1.58, 1.33, 1.05, 0.71, 0.34, 0];
@@ -159,7 +174,7 @@
       bgVid.style.clipPath =
         `inset(${top.toFixed(1)}px ${(stage.clientWidth - left - gw).toFixed(1)}px ` +
         `${(stage.clientHeight - top - gh).toFixed(1)}px ${left.toFixed(1)}px ` +
-        `round 4% 18% 2% 2% / 12% 48% 5% 5%)`;
+        `round 4% 11% 1.6% 1.6% / 12% 28% 4% 4%)`;
     }
     veil.style.opacity = fadeWorld.toFixed(3);
     if (sheen) {
@@ -207,6 +222,20 @@
         grd.addColorStop(1, 'rgba(0,0,0,0)');
         bctx.fillStyle = grd;
         bctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+
+      const rainDt = rainClock ? Math.min(0.05, (now - rainClock) / 1000) : 0;
+      rainClock = now;
+      for (const d of drops) {
+        d.y += d.v * rainDt;
+        if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
+        const dx = gw * (d.x + d.y * 0.015);
+        bctx.strokeStyle = `rgba(196, 216, 232, ${d.a.toFixed(3)})`;
+        bctx.lineWidth = d.w;
+        bctx.beginPath();
+        bctx.moveTo(dx, gh * d.y);
+        bctx.lineTo(dx - gw * 0.004, gh * (d.y - d.len));
+        bctx.stroke();
       }
     }
 

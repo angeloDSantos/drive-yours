@@ -14,7 +14,7 @@
   --glass: #9fd4c0;
   /* the saloon rear-door glass silhouette: upright front edge, long
      C-pillar sweep top-rear, straight beltline along the bottom */
-  --pane-shape: 4% 18% 2% 2% / 12% 48% 5% 5%;
+  --pane-shape: 4% 11% 1.6% 1.6% / 12% 28% 4% 4%;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
 }
