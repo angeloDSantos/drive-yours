@@ -18,6 +18,8 @@
   const bgImg = document.querySelector('.stage-bg img');
   const veil = document.querySelector('.stage-veil');
   const sheen = document.querySelector('.sheen');
+  const aperGlow = document.querySelector('.aperture-glow');
+  const etch = document.querySelector('.etch');
 
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
@@ -69,7 +71,7 @@
     const tilt = easeInOut(ramp(p, 0.14, 0.34));
     const fan = ramp(p, 0.28, 0.78);
     const openFade = 1 - ramp(p, 0.14, 0.26);
-    const railIn = ramp(p, 0.26, 0.36);
+    const railIn = ramp(p, 0.34, 0.44);
     const closeIn = ramp(p, 0.84, 0.94);
 
     /* The pane starts seated in the photo's window, then comes off it,
@@ -80,20 +82,42 @@
     const seatX = a.cx - stage.clientWidth / 2;
     const seatY = a.cy - stage.clientHeight / 2;
 
-    const ry = (onPhone ? -14 - 36 * tilt : -16 - 44 * tilt) * lift;
-    const rx = (5 + 6 * tilt) * lift;
-    const scale = seatScale + (1 - 0.12 * tilt - seatScale) * lift;
     const fanEase = easeInOut(fan);
+
+    /* The pop: the pane peels out of the frame top-first and swells
+       towards the viewer before settling into the study angle. */
+    const peel = Math.sin(Math.PI * Math.min(1, lift * 1.3)) * (1 - lift);
+    const pop = 1 + 0.09 * Math.sin(Math.PI * Math.min(1, lift * 1.15)) * (1 - fanEase);
+
+    const ry = (onPhone ? -14 - 36 * tilt : -16 - 44 * tilt) * lift;
+    const rx = (5 + 6 * tilt) * lift - 9 * peel;
+    const scale = (seatScale + (1 - 0.12 * tilt - seatScale) * lift) * pop;
     const shiftX = seatX * (1 - lift) + ((onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150)) * lift;
     const shiftY = seatY * (1 - lift) + fanEase * (onPhone ? 36 : 22) * lift;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    /* The cabin recedes as the pane comes away. */
+    /* Once the pane is away, the whole world goes to black so the
+       teardown reads against a clean ground. */
+    const toBlack = easeInOut(ramp(p, 0.12, 0.4));
     bgImg.style.transform = `scale(${(1.03 + 0.07 * lift).toFixed(4)})`;
-    veil.style.opacity = Math.min(0.92, 0.3 * lift + 0.34 * fanEase + 0.3 * closeIn).toFixed(3);
-    if (sheen) sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
+    veil.style.opacity = toBlack.toFixed(3);
+    if (sheen) {
+      sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
+      sheen.style.opacity = (0.35 + 0.65 * lift).toFixed(3);
+    }
+    if (etch) etch.style.opacity = lift.toFixed(3);
+    if (aperGlow) {
+      const g = apertureRect();
+      const gw = g.w;
+      const gh = g.w * (APERTURE.h / APERTURE.w);
+      aperGlow.style.left = `${(g.cx - gw / 2).toFixed(1)}px`;
+      aperGlow.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
+      aperGlow.style.width = `${gw.toFixed(1)}px`;
+      aperGlow.style.height = `${gh.toFixed(1)}px`;
+      aperGlow.style.opacity = (lift * (1 - toBlack)).toFixed(3);
+    }
 
     /* Each layer leaves in street-to-cabin order. Seated, the stack must
        read as one near-black pane of privacy glass, so every film except
@@ -104,7 +128,10 @@
     for (let i = 0; i < layers.length; i++) {
       const lp = easeOut(ramp(fan, i * 0.055, i * 0.055 + 0.6));
       layers[i].style.transform = `translateZ(${(lp * SPREAD[i] * fanDepth).toFixed(2)}px)`;
-      const material = i === 4 ? 1 : 0.22 + 0.78 * lift;
+      /* Seated, the pane is not a drawn thing at all: the ceramic tint
+         alone darkens the photo's window, and the glass only materialises
+         as it comes away. */
+      const material = i === 4 ? 0.6 + 0.4 * lift : 0.12 + 0.88 * lift;
       layers[i].style.opacity = (material * dim).toFixed(3);
       const on = lp > 0.5;
       if (railRows[i]) railRows[i].classList.toggle('is-on', on);
