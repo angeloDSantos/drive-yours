@@ -20,6 +20,7 @@
   const sheen = document.querySelector('.sheen');
   const aperGlow = document.querySelector('.aperture-glow');
   const etch = document.querySelector('.etch');
+  const bokeh = document.querySelector('.bokeh-live');
 
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
@@ -39,6 +40,45 @@
       w: APERTURE.w * s,
     };
   }
+
+  /* The live city: the brightest points inside the photo's window, found
+     once from the actual pixels, then redrawn as soft breathing glows on a
+     canvas over the same spots. No second asset, nothing to misalign. */
+  let sprites = [];
+  function seedBokeh() {
+    const c = document.createElement('canvas');
+    c.width = IMG.w;
+    c.height = IMG.h;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(bgImg, 0, 0, IMG.w, IMG.h);
+    let d;
+    try {
+      d = g.getImageData(APERTURE.x, APERTURE.y, APERTURE.w, APERTURE.h).data;
+    } catch { return; }
+    const pts = [];
+    const step = 6;
+    for (let y = step; y < APERTURE.h - step; y += step) {
+      for (let x = step; x < APERTURE.w - step; x += step) {
+        const i = (y * APERTURE.w + x) * 4;
+        const l = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        if (l > 105) pts.push({ x, y, l, r: d[i], g: d[i + 1], b: d[i + 2] });
+      }
+    }
+    pts.sort((a, b) => b.l - a.l);
+    for (const p of pts) {
+      if (sprites.length >= 26) break;
+      if (sprites.every((s) => (s.x - p.x) ** 2 + (s.y - p.y) ** 2 > 52 * 52)) {
+        sprites.push({
+          ...p,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.35 + Math.random() * 0.7,
+          size: 9 + Math.random() * 18,
+        });
+      }
+    }
+  }
+  if (bgImg.complete) seedBokeh();
+  else bgImg.addEventListener('load', seedBokeh, { once: true });
 
   /* Street side -> cabin side. Spread is each layer's share of the fan
      depth, taken from the physical stack (films sit tighter than glass). */
@@ -62,7 +102,7 @@
     target = total > 0 ? clamp01(-r.top / total) : 1;
   }
 
-  function apply(p) {
+  function apply(p, now = 0) {
     const onPhone = phone.matches;
     const fanDepth = onPhone ? 165 : 300;
 
@@ -123,6 +163,36 @@
       aperGlow.style.opacity = (fadeWorld * (1 - study)).toFixed(3);
     }
 
+    if (bokeh && sprites.length) {
+      const g = apertureRect();
+      const gw = Math.round(g.w);
+      const gh = Math.round(g.w * (APERTURE.h / APERTURE.w));
+      if (bokeh.width !== gw || bokeh.height !== gh) {
+        bokeh.width = gw;
+        bokeh.height = gh;
+      }
+      bokeh.style.left = `${(g.cx - gw / 2).toFixed(1)}px`;
+      bokeh.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
+      bokeh.style.opacity = (1 - fadeWorld).toFixed(3);
+      const bctx = bokeh.getContext('2d');
+      bctx.clearRect(0, 0, gw, gh);
+      bctx.globalCompositeOperation = 'lighter';
+      const k = gw / APERTURE.w;
+      const t = now / 1000;
+      for (const sp of sprites) {
+        const alpha = 0.16 * (0.5 + 0.5 * Math.sin(t * sp.speed + sp.phase));
+        if (alpha < 0.005) continue;
+        const r = Math.max(2, sp.size * k);
+        const cx = sp.x * k;
+        const cy = sp.y * k;
+        const grd = bctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        grd.addColorStop(0, `rgba(${sp.r},${sp.g},${sp.b},${alpha.toFixed(3)})`);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        bctx.fillStyle = grd;
+        bctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+    }
+
     /* Each layer leaves in street-to-cabin order. Seated, the stack must
        read as one near-black pane of privacy glass, so every film except
        the ceramic only fades in as the pane lifts. The close-card dim is
@@ -165,7 +235,7 @@
     /* Time-normalised lerp: same feel at any refresh rate. */
     current += (target - current) * (1 - Math.pow(0.0004, dt / 1000));
     if (Math.abs(target - current) < 0.0004) current = target;
-    apply(current);
+    apply(current, now);
     raf = requestAnimationFrame(frame);
   }
 

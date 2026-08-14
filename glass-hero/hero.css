@@ -98,6 +98,13 @@ a { color: inherit; text-decoration: none; }
     linear-gradient(90deg, rgba(4, 5, 5, 0.72) 0%, rgba(5, 6, 6, 0.32) 34%, rgba(5, 6, 6, 0.12) 60%, rgba(4, 5, 5, 0.4) 100%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.14) 34%, rgba(0, 0, 0, 0.66) 100%);
 }
+/* Live city: the photo's own bokeh points, redrawn on a canvas clipped to
+   the window so the distant lights breathe. Positioned per frame from JS. */
+.bokeh-live {
+  position: absolute;
+  border-radius: 22px;
+  pointer-events: none;
+}
 .stage-veil {
   position: absolute;
   z-index: 1;
