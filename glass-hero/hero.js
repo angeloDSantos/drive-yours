@@ -16,6 +16,7 @@
   const hint = document.querySelector('.scroll-hint');
   const glow = document.querySelector('.stage-glow');
   const bgImg = document.querySelector('.stage-bg img');
+  const bgVid = document.querySelector('.stage-bg video');
   const veil = document.querySelector('.stage-veil');
   const sheen = document.querySelector('.sheen');
   const aperGlow = document.querySelector('.aperture-glow');
@@ -143,7 +144,9 @@
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    bgImg.style.transform = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
+    const bgScale = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
+    bgImg.style.transform = bgScale;
+    if (bgVid) bgVid.style.transform = bgScale;
     veil.style.opacity = fadeWorld.toFixed(3);
     if (sheen) {
       sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
@@ -240,7 +243,8 @@
   }
 
   function still() {
-    /* Reduced motion: the finished teardown, no scrubbing. */
+    /* Reduced motion: the finished teardown, no scrubbing, no loop. */
+    if (bgVid) bgVid.pause();
     apply(1);
     copyOpen.style.opacity = '1';
     copyOpen.style.visibility = 'visible';

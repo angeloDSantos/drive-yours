@@ -82,13 +82,20 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   overflow: clip;
 }
-.stage-bg img {
+.stage-bg img,
+.stage-bg video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 50% 42%;
   filter: saturate(0.78) contrast(1.05);
   transform-origin: 50% 40%;
+}
+/* The loop sits over the still; the still is the instant first paint and
+   the fallback when autoplay is refused. Same aspect, same cover math. */
+.stage-bg video {
+  position: absolute;
+  inset: 0;
 }
 .stage-bg::after {
   content: "";
