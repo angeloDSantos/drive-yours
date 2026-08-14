@@ -72,8 +72,8 @@
         sprites.push({
           ...p,
           phase: Math.random() * Math.PI * 2,
-          speed: 0.35 + Math.random() * 0.7,
-          size: 9 + Math.random() * 18,
+          speed: 0.5 + Math.random() * 0.9,
+          size: 12 + Math.random() * 22,
         });
       }
     }
@@ -183,7 +183,7 @@
       const k = gw / APERTURE.w;
       const t = now / 1000;
       for (const sp of sprites) {
-        const alpha = 0.16 * (0.5 + 0.5 * Math.sin(t * sp.speed + sp.phase));
+        const alpha = 0.3 * (0.5 + 0.5 * Math.sin(t * sp.speed + sp.phase));
         if (alpha < 0.005) continue;
         const r = Math.max(2, sp.size * k);
         const cx = sp.x * k;
@@ -209,7 +209,9 @@
     for (let i = 0; i < layers.length; i++) {
       const lp = easeOut(ramp(fan, i * 0.055, i * 0.055 + 0.6));
       layers[i].style.transform = `translateZ(${(lp * SPREAD[i] * fanDepth).toFixed(2)}px)`;
-      const material = i === 4 ? 0.6 + 0.4 * materialise : 0.12 + 0.88 * materialise;
+      /* Seated haze kept low so the living city stays readable through
+         the tint. */
+      const material = i === 4 ? 0.6 + 0.4 * materialise : 0.07 + 0.93 * materialise;
       layers[i].style.opacity = (material * dim).toFixed(3);
       const on = lp > 0.5;
       if (railRows[i]) railRows[i].classList.toggle('is-on', on);
