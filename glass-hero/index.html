@@ -127,22 +127,45 @@
         <h2>Four depths of quiet.</h2>
         <div class="shade-duo" aria-hidden="true">
           <div class="shade-window">
-            <div class="shade-veil"></div>
+            <div class="shade-veil" data-style="full"></div>
             <span class="shade-tag">From your seat</span>
             <span class="shade-label">VLT 5</span>
+            <span class="glass-mark">D Y</span>
           </div>
           <div class="shade-out">
             <img src="assets/vito-exterior-rain.png" alt="" loading="lazy" />
-            <div class="shade-out-veil v-main"></div>
-            <div class="shade-out-veil v-front"></div>
+            <div class="shade-out-veil v-main" data-style="full"></div>
+            <div class="shade-out-veil v-front" data-style="full"></div>
             <span class="shade-tag">From the street</span>
+            <span class="glass-mark glass-mark-out">D Y</span>
           </div>
         </div>
-        <div class="shade-row" role="group" aria-label="Shade options">
-          <button class="shade-btn" data-vlt="70" data-note="Barely visible. Heat and fade control with the factory look kept.">VLT 70</button>
-          <button class="shade-btn" data-vlt="35" data-note="The daily choice. A clear step darker that still reads as glass.">VLT 35</button>
-          <button class="shade-btn" data-vlt="20" data-note="Serious shade. Faces soften to shapes from a metre away.">VLT 20</button>
-          <button class="shade-btn is-active" data-vlt="5" data-note="The executive depth. From outside the cabin simply is not there.">VLT 5</button>
+        <div class="shade-controls">
+          <div class="shade-group">
+            <p class="shade-group-label">Depth</p>
+            <div class="shade-row" role="group" aria-label="Depth">
+              <button class="shade-btn" data-vlt="70" data-note="Barely visible. Heat and fade control with the factory look kept.">VLT 70</button>
+              <button class="shade-btn" data-vlt="35" data-note="The daily choice. A clear step darker that still reads as glass.">VLT 35</button>
+              <button class="shade-btn" data-vlt="20" data-note="Serious shade. Faces soften to shapes from a metre away.">VLT 20</button>
+              <button class="shade-btn is-active" data-vlt="5" data-note="The executive depth. From outside the cabin simply is not there.">VLT 5</button>
+            </div>
+          </div>
+          <div class="shade-group">
+            <p class="shade-group-label">Styling</p>
+            <div class="shade-row" role="group" aria-label="Styling">
+              <button class="shade-btn is-active" data-style="full" data-note="">Full</button>
+              <button class="shade-btn" data-style="fade" data-note="Faded from the crown down, like a factory sunband grown up.">Fade</button>
+              <button class="shade-btn" data-style="visor" data-note="A visor band across the top of the glass, the rest kept honest.">Visor</button>
+              <button class="shade-btn" data-style="split" data-note="Front doors a legal step lighter. The cabin behind you at full depth.">Split</button>
+            </div>
+          </div>
+          <div class="shade-group">
+            <p class="shade-group-label">Signature</p>
+            <div class="shade-row" role="group" aria-label="Signature">
+              <button class="shade-btn is-active" data-mark="off" data-note="">None</button>
+              <button class="shade-btn" data-mark="on" data-note="A frosted monogram etched low in the corner, yours to spot.">DY etch</button>
+            </div>
+          </div>
         </div>
         <p class="shade-note">The executive depth. From outside the cabin simply is not there.</p>
       </div>

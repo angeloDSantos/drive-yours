@@ -308,22 +308,45 @@
   }
 
   /* Tap a depth, the window answers. */
-  const shadeBtns = [...document.querySelectorAll('.shade-btn')];
   const shadeVeil = document.querySelector('.shade-veil');
-  const shadeOutVeils = [...document.querySelectorAll('.shade-out-veil')];
+  const outMain = document.querySelector('.shade-out-veil.v-main');
+  const outFront = document.querySelector('.shade-out-veil.v-front');
   const shadeNote = document.querySelector('.shade-note');
   const shadeLabel = document.querySelector('.shade-label');
+  const marks = [...document.querySelectorAll('.glass-mark')];
+
   /* Inside: how much of the city the tint gives up.
      Outside: how much of you the street gets back. */
   const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
   const SHADE_OUT = { 70: 0.12, 35: 0.42, 20: 0.62, 5: 0.88 };
-  shadeBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      shadeBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
-      shadeVeil.style.opacity = SHADE_DIM[btn.dataset.vlt];
-      shadeOutVeils.forEach((v) => { v.style.opacity = SHADE_OUT[btn.dataset.vlt]; });
-      shadeNote.textContent = btn.dataset.note;
-      shadeLabel.textContent = `VLT ${btn.dataset.vlt}`;
+
+  const shadeState = { vlt: '5', style: 'full', mark: false };
+  const shadeNotes = { vlt: 'The executive depth. From outside the cabin simply is not there.', style: '', mark: '' };
+
+  function renderShade() {
+    shadeVeil.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
+    outMain.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
+    outFront.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
+    shadeVeil.style.opacity = SHADE_DIM[shadeState.vlt];
+    outMain.style.opacity = SHADE_OUT[shadeState.vlt];
+    /* Split keeps the front doors a legal step lighter than the cabin. */
+    outFront.style.opacity = shadeState.style === 'split' ? 0.18 : SHADE_OUT[shadeState.vlt];
+    marks.forEach((m) => m.classList.toggle('is-on', shadeState.mark));
+    const styleTag = shadeState.style === 'full' ? '' : ` · ${shadeState.style.toUpperCase()}`;
+    shadeLabel.textContent = `VLT ${shadeState.vlt}${styleTag}`;
+    shadeNote.textContent = [shadeNotes.vlt, shadeNotes.style, shadeNotes.mark].filter(Boolean).join(' ');
+  }
+
+  document.querySelectorAll('.shade-row').forEach((row) => {
+    const btns = [...row.querySelectorAll('.shade-btn')];
+    btns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btns.forEach((b) => b.classList.toggle('is-active', b === btn));
+        if (btn.dataset.vlt) { shadeState.vlt = btn.dataset.vlt; shadeNotes.vlt = btn.dataset.note; }
+        if (btn.dataset.style) { shadeState.style = btn.dataset.style; shadeNotes.style = btn.dataset.note; }
+        if (btn.dataset.mark) { shadeState.mark = btn.dataset.mark === 'on'; shadeNotes.mark = btn.dataset.note; }
+        renderShade();
+      });
     });
   });
 })();
