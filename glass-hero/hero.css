@@ -8,7 +8,7 @@
   --ink-2: #0b0c0c;
   --paper: #e7e7e3;
   --muted: #8d908e;
-  --faint: #5a5e5c;
+  --faint: #7c807e;
   --line: rgba(255, 255, 255, 0.14);
   /* the float-glass edge colour from the teardown, used sparingly below */
   --glass: #9fd4c0;
@@ -17,6 +17,19 @@
 }
 
 * { box-sizing: border-box; }
+/* Geometry defs only: must take no space, or it offsets the sticky hero. */
+.geo { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* Named for screen readers, absent for everyone else. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 html { scroll-behavior: auto; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
@@ -564,8 +577,6 @@ a { color: inherit; text-decoration: none; }
 }
 .glass-mark.is-on { opacity: 0.55; }
 
-.shade-panel .shade-btn { padding: 10px 14px; }
-.shade-panel .shade-note { min-height: 0; font-size: 13px; }
 .shade-group-label {
   margin: 0 0 10px;
   color: var(--faint);
@@ -584,7 +595,7 @@ a { color: inherit; text-decoration: none; }
   background: transparent;
   color: var(--muted);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 12px 22px;
+  padding: 10px 14px;
   font: 500 10px/1 var(--mono);
   letter-spacing: 0.24em;
   transition: color 0.25s, border-color 0.25s, background 0.25s;
@@ -599,10 +610,11 @@ a { color: inherit; text-decoration: none; }
 .shade-note {
   margin: 20px 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
   max-width: 52ch;
-  min-height: 3.4em;
+  /* reserved so the panel does not jump as the note changes length */
+  min-height: 5.2em;
 }
 
 /* The process */
@@ -651,7 +663,9 @@ a { color: inherit; text-decoration: none; }
 }
 .foot-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 26px;
+  overflow-wrap: anywhere;
   color: #9a9e9b;
   font: 500 9px/1 var(--mono);
   letter-spacing: 0.22em;

@@ -29,17 +29,30 @@
      out to x1502, beltline at y592 */
   const APERTURE = { x: 306, y: 154, w: 1196, h: 438 };
 
-  function apertureRect() {
+  /* The plate is never shown at 1:1 — it sits at a slight zoom that grows
+     as the world fades. Everything that has to land on the photographed
+     window (the pane's seat, the held window, the light behind it, the
+     bokeh canvas) goes through this one mapping, at the same zoom, so they
+     cannot drift apart. */
+  const bgZoom = (fadeWorld) => 1.03 + 0.05 * fadeWorld;
+
+  function apertureRect(zoom) {
     const W = stage.clientWidth;
     const H = stage.clientHeight;
     const s = Math.max(W / IMG.w, H / IMG.h);
     /* mirrors object-fit: cover at object-position 50% 42% */
     const ox = (W - IMG.w * s) * 0.5;
     const oy = (H - IMG.h * s) * 0.42;
+    /* then the plate's own scale, about transform-origin 50% 40% */
+    const cx0 = W * 0.5;
+    const cy0 = H * 0.4;
+    const ax = ox + (APERTURE.x + APERTURE.w / 2) * s;
+    const ay = oy + (APERTURE.y + APERTURE.h / 2) * s;
     return {
-      cx: ox + (APERTURE.x + APERTURE.w / 2) * s,
-      cy: oy + (APERTURE.y + APERTURE.h / 2) * s,
-      w: APERTURE.w * s,
+      cx: cx0 + (ax - cx0) * zoom,
+      cy: cy0 + (ay - cy0) * zoom,
+      w: APERTURE.w * s * zoom,
+      h: APERTURE.h * s * zoom,
     };
   }
 
@@ -48,13 +61,20 @@
      canvas over the same spots. No second asset, nothing to misalign. */
   let sprites = [];
   function seedBokeh() {
-    const c = document.createElement('canvas');
-    c.width = IMG.w;
-    c.height = IMG.h;
-    const g = c.getContext('2d', { willReadFrequently: true });
-    g.drawImage(bgImg, 0, 0, IMG.w, IMG.h);
     let d;
+    /* Sampling can fail for reasons that must not take the page with them:
+       a broken plate, no 2d context, or a tainted canvas on file://. The
+       teardown, the rain and the rest of the site carry on without it. */
     try {
+      const c = document.createElement('canvas');
+      c.width = IMG.w;
+      c.height = IMG.h;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      if (!g) return;
+      /* sample through the same filter the plate is displayed with, so the
+         glows match the pixels they sit on */
+      g.filter = 'saturate(0.82) contrast(1.04) brightness(1.24)';
+      g.drawImage(bgImg, 0, 0, IMG.w, IMG.h);
       d = g.getImageData(APERTURE.x, APERTURE.y, APERTURE.w, APERTURE.h).data;
     } catch { return; }
     const pts = [];
@@ -81,6 +101,10 @@
   }
   if (bgImg.complete) seedBokeh();
   else bgImg.addEventListener('load', seedBokeh, { once: true });
+  /* Cached per-sprite gradients: their geometry only changes when the
+     canvas is resized, so they are built there, not every frame. */
+  let spriteGrads = [];
+  let bctx = null;
 
   /* Rain on the glass: thin streaks sliding down inside the aperture,
      drawn on the same canvas so they can never drift off the window. */
@@ -134,13 +158,14 @@
     const railIn = ramp(p, 0.48, 0.58);
     const closeIn = ramp(p, 0.85, 0.94);
 
-    /* The pane starts seated in the photo's window and holds that seat
-       while the world fades — only a slight breathe towards the viewer
-       says it is now the one thing left. Then it detaches, turns to a
-       three-quarter view and fans. The fan spreads towards the viewer's
-       left, so the group follows it right and down. */
-    const a = apertureRect();
-    const seatScale = a.w / pane.offsetWidth;
+    /* The pane is seated in the photographed window and tracks it exactly,
+       zoom and all, so while the world fades the glass simply stays where
+       the car's window is. Then it detaches, turns to a three-quarter view
+       and fans. The fan spreads towards the viewer's left, so the group
+       follows it right and down. */
+    const zoom = bgZoom(fadeWorld);
+    const a = apertureRect(zoom);
+    const seatScale = pane.offsetWidth ? a.w / pane.offsetWidth : 1;
     const seatX = a.cx - stage.clientWidth / 2;
     const seatY = a.cy - stage.clientHeight / 2;
 
@@ -150,88 +175,89 @@
        towards the viewer before settling into the study angle. */
     const peel = Math.sin(Math.PI * Math.min(1, study * 1.3)) * (1 - study);
     const pop = 1 + 0.09 * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
-    const seatHold = 1 + 0.04 * fadeWorld * (1 - study);
 
     const ry = (onPhone ? -50 : -60) * study;
     const rx = (5 + 6 * study) * study - 9 * peel;
-    const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop * seatHold;
+    const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop;
     const shiftX = seatX * (1 - study) + ((onPhone ? 54 : 70) + fanEase * (onPhone ? 150 : 150)) * study;
     const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    bgImg.style.transform = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
+    bgImg.style.transform = `scale(${zoom.toFixed(4)})`;
     veil.style.opacity = fadeWorld.toFixed(3);
 
     /* The rest of the car goes; the glass stays. The hold is the window's
        own pixels mapped at the plate's resting scale, riding above the
        veil until the pane has clearly popped out. */
+    const left = a.cx - a.w / 2;
+    const top = a.cy - a.h / 2;
     if (windowHold) {
-      const W = stage.clientWidth;
-      const H = stage.clientHeight;
-      const s = Math.max(W / IMG.w, H / IMG.h);
-      const k = 1.03; /* the plate's resting zoom */
-      const ox = (W - IMG.w * s) * 0.5;
-      const oy = (H - IMG.h * s) * 0.42;
-      const cx0 = W * 0.5;
-      const cy0 = H * 0.4; /* matches the plate's transform-origin */
-      const left = cx0 + (ox + APERTURE.x * s - cx0) * k;
-      const top = cy0 + (oy + APERTURE.y * s - cy0) * k;
-      const bx = cx0 + (ox - cx0) * k;
-      const by = cy0 + (oy - cy0) * k;
+      const s = Math.max(stage.clientWidth / IMG.w, stage.clientHeight / IMG.h) * zoom;
       windowHold.style.left = `${left.toFixed(1)}px`;
       windowHold.style.top = `${top.toFixed(1)}px`;
-      windowHold.style.width = `${(APERTURE.w * s * k).toFixed(1)}px`;
-      windowHold.style.height = `${(APERTURE.h * s * k).toFixed(1)}px`;
-      windowHold.style.backgroundSize = `${(IMG.w * s * k).toFixed(1)}px ${(IMG.h * s * k).toFixed(1)}px`;
-      windowHold.style.backgroundPosition = `${(bx - left).toFixed(1)}px ${(by - top).toFixed(1)}px`;
+      windowHold.style.width = `${a.w.toFixed(1)}px`;
+      windowHold.style.height = `${a.h.toFixed(1)}px`;
+      windowHold.style.backgroundSize = `${(IMG.w * s).toFixed(1)}px ${(IMG.h * s).toFixed(1)}px`;
+      windowHold.style.backgroundPosition = `${(-APERTURE.x * s).toFixed(1)}px ${(-APERTURE.y * s).toFixed(1)}px`;
       windowHold.style.opacity = (fadeWorld * (1 - release)).toFixed(3);
     }
     if (etch) etch.style.opacity = study.toFixed(3);
     if (aperGlow) {
       /* While the world fades, a soft light behind the seated window makes
          it the last lit thing on the page. It dies as the pane detaches. */
-      const g = apertureRect();
-      const gw = g.w;
-      const gh = g.w * (APERTURE.h / APERTURE.w);
-      aperGlow.style.left = `${(g.cx - gw / 2).toFixed(1)}px`;
-      aperGlow.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
-      aperGlow.style.width = `${gw.toFixed(1)}px`;
-      aperGlow.style.height = `${gh.toFixed(1)}px`;
+      aperGlow.style.left = `${left.toFixed(1)}px`;
+      aperGlow.style.top = `${top.toFixed(1)}px`;
+      aperGlow.style.width = `${a.w.toFixed(1)}px`;
+      aperGlow.style.height = `${a.h.toFixed(1)}px`;
       aperGlow.style.opacity = (fadeWorld * (1 - study)).toFixed(3);
     }
 
-    if (bokeh && sprites.length) {
-      const g = apertureRect();
-      const gw = Math.round(g.w);
-      const gh = Math.round(g.w * (APERTURE.h / APERTURE.w));
+    /* The rain needs no sampled pixels, so it draws whether or not the
+       bokeh seeding succeeded. */
+    if (bokeh) {
+      const gw = Math.round(a.w);
+      const gh = Math.round(a.h);
       if (bokeh.width !== gw || bokeh.height !== gh) {
         bokeh.width = gw;
         bokeh.height = gh;
+        spriteGrads = [];
       }
-      bokeh.style.left = `${(g.cx - gw / 2).toFixed(1)}px`;
-      bokeh.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
+      bokeh.style.left = `${left.toFixed(1)}px`;
+      bokeh.style.top = `${top.toFixed(1)}px`;
       bokeh.style.opacity = (1 - release).toFixed(3);
-      const bctx = bokeh.getContext('2d');
+      if (!bctx) bctx = bokeh.getContext('2d');
+      if (bctx) {
+      const k = gw / APERTURE.w;
+      if (spriteGrads.length !== sprites.length) {
+        spriteGrads = sprites.map((sp) => {
+          const r = Math.max(2, sp.size * k);
+          const cx = sp.x * k;
+          const cy = sp.y * k;
+          const grd = bctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          grd.addColorStop(0, `rgb(${sp.r},${sp.g},${sp.b})`);
+          grd.addColorStop(1, 'rgba(0,0,0,0)');
+          return { grd, r, cx, cy };
+        });
+      }
       bctx.clearRect(0, 0, gw, gh);
       bctx.globalCompositeOperation = 'lighter';
-      const k = gw / APERTURE.w;
       const t = now / 1000;
-      for (const sp of sprites) {
+      for (let i = 0; i < sprites.length; i++) {
+        const sp = sprites[i];
+        const g = spriteGrads[i];
         const alpha = 0.3 * (0.5 + 0.5 * Math.sin(t * sp.speed + sp.phase));
-        if (alpha < 0.005) continue;
-        const r = Math.max(2, sp.size * k);
-        const cx = sp.x * k;
-        const cy = sp.y * k;
-        const grd = bctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        grd.addColorStop(0, `rgba(${sp.r},${sp.g},${sp.b},${alpha.toFixed(3)})`);
-        grd.addColorStop(1, 'rgba(0,0,0,0)');
-        bctx.fillStyle = grd;
-        bctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        if (alpha < 0.005 || !g) continue;
+        bctx.globalAlpha = alpha;
+        bctx.fillStyle = g.grd;
+        bctx.fillRect(g.cx - g.r, g.cy - g.r, g.r * 2, g.r * 2);
       }
+      bctx.globalAlpha = 1;
 
-      const rainDt = rainClock ? Math.min(0.05, (now - rainClock) / 1000) : 0;
+      /* clamped both ways: a still() frame passes now = 0, which would
+         otherwise drive every drop far off the top of the glass */
+      const rainDt = rainClock ? Math.max(0, Math.min(0.05, (now - rainClock) / 1000)) : 0;
       rainClock = now;
       for (const d of drops) {
         d.y += d.v * rainDt;
@@ -243,6 +269,7 @@
         bctx.moveTo(dx, gh * d.y);
         bctx.lineTo(dx - gw * 0.004, gh * (d.y - d.len));
         bctx.stroke();
+      }
       }
     }
 
@@ -278,27 +305,54 @@
     spec.style.transform = `translateX(-50%) translateY(${(14 * (1 - easeOut(specIn))).toFixed(2)}px)`;
 
     copyClose.style.opacity = closeIn.toFixed(3);
-    copyClose.classList.toggle('is-live', closeIn > 0.5);
-    copyClose.setAttribute('aria-hidden', closeIn > 0.5 ? 'false' : 'true');
+    const closeLive = closeIn > 0.5;
+    copyClose.classList.toggle('is-live', closeLive);
+    copyClose.setAttribute('aria-hidden', closeLive ? 'false' : 'true');
+    copyClose.inert = !closeLive;
+  }
+
+  /* The hero only animates while it is actually on screen: below it the
+     page is a normal document and the canvas has nothing to say. */
+  let heroVisible = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(
+      ([e]) => { heroVisible = e.isIntersecting; },
+      { threshold: 0 }
+    ).observe(track);
   }
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(64, now - last);
     last = now;
-    measure();
-    /* Time-normalised lerp: same feel at any refresh rate. */
-    current += (target - current) * (1 - Math.pow(0.0004, dt / 1000));
-    if (Math.abs(target - current) < 0.0004) current = target;
-    apply(current, now);
+    if (heroVisible && !document.hidden) {
+      measure();
+      /* Time-normalised lerp: same feel at any refresh rate. */
+      current += (target - current) * (1 - Math.pow(0.0004, dt / 1000));
+      if (Math.abs(target - current) < 0.0004) current = target;
+      try {
+        apply(current, now);
+      } catch (err) {
+        /* one bad frame must not freeze the teardown for the whole visit */
+        console.error(err);
+      }
+    } else {
+      rainClock = now;
+    }
     raf = requestAnimationFrame(frame);
   }
 
   function still() {
-    /* Reduced motion: the finished teardown, no scrubbing. */
+    /* Reduced motion: the finished teardown, no scrubbing. Only the
+       opening copy is shown — apply(1) would otherwise print the close
+       card on top of it. */
     apply(1);
     copyOpen.style.opacity = '1';
     copyOpen.style.visibility = 'visible';
+    copyClose.style.opacity = '0';
+    copyClose.classList.remove('is-live');
+    copyClose.setAttribute('aria-hidden', 'true');
+    copyClose.inert = true;
   }
 
   if (reduced.matches) {
@@ -399,6 +453,7 @@
     [...row.querySelectorAll('.shade-btn')].forEach((b) => {
       const hit = b.dataset[attr] === value;
       b.classList.toggle('is-active', hit);
+      b.setAttribute('aria-pressed', hit ? 'true' : 'false');
       if (hit && b.dataset.note !== undefined) shadeNotes[attr === 'mark' ? 'mark' : attr] = b.dataset.note;
     });
   }
@@ -407,7 +462,10 @@
     const btns = [...row.querySelectorAll('.shade-btn')];
     btns.forEach((btn) => {
       btn.addEventListener('click', () => {
-        btns.forEach((b) => b.classList.toggle('is-active', b === btn));
+        btns.forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
         if (btn.dataset.vlt) { shadeState.vlt = btn.dataset.vlt; shadeNotes.vlt = btn.dataset.note; }
         if (btn.dataset.style) { shadeState.style = btn.dataset.style; shadeNotes.style = btn.dataset.note; }
         if (btn.dataset.mark) { shadeState.mark = btn.dataset.mark === 'on'; shadeNotes.mark = btn.dataset.note; }
@@ -419,8 +477,12 @@
   /* The spec survives the visit: saved on demand, restored on return. */
   try {
     const saved = JSON.parse(localStorage.getItem('dy-spec') || 'null');
-    if (saved && SHADE_DIM[saved.vlt] && STYLE_NAME[saved.style]) {
-      Object.assign(shadeState, { vlt: saved.vlt, style: saved.style, mark: !!saved.mark });
+    const vlt = saved && String(saved.vlt);
+    const style = saved && String(saved.style);
+    /* own properties only: "constructor" and friends are inherited and
+       would otherwise pass this test and poison the spec */
+    if (saved && Object.hasOwn(SHADE_DIM, vlt) && Object.hasOwn(STYLE_NAME, style)) {
+      Object.assign(shadeState, { vlt, style, mark: !!saved.mark });
       document.querySelectorAll('.shade-row').forEach((row) => {
         if (row.querySelector('[data-vlt]')) setActive(row, 'vlt', shadeState.vlt);
         else if (row.querySelector('[data-style]')) setActive(row, 'style', shadeState.style);
@@ -431,6 +493,7 @@
   renderShade();
 
   if (saveBtn) {
+    let saveTimer = 0;
     saveBtn.addEventListener('click', () => {
       try {
         localStorage.setItem('dy-spec', JSON.stringify(shadeState));
@@ -438,7 +501,8 @@
       } catch {
         saveBtn.textContent = 'Could not save here';
       }
-      setTimeout(() => { saveBtn.textContent = 'Save spec'; }, 1800);
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveBtn.textContent = 'Save spec'; }, 1800);
     });
   }
 })();
