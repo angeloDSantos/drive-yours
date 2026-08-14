@@ -16,12 +16,12 @@
   const hint = document.querySelector('.scroll-hint');
   const glow = document.querySelector('.stage-glow');
   const bgImg = document.querySelector('.stage-bg img');
-  const bgVid = document.querySelector('.stage-bg video');
   const veil = document.querySelector('.stage-veil');
   const sheen = document.querySelector('.sheen');
   const aperGlow = document.querySelector('.aperture-glow');
   const etch = document.querySelector('.etch');
   const bokeh = document.querySelector('.bokeh-live');
+  const windowHold = document.querySelector('.window-hold');
 
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
@@ -127,6 +127,7 @@
        to the study angle, then it fans apart. */
     const fadeWorld = easeInOut(ramp(p, 0.05, 0.26)); /* cabin -> black, window holds */
     const study = easeInOut(ramp(p, 0.24, 0.46));     /* window detaches, turns 3/4 */
+    const release = easeInOut(ramp(p, 0.26, 0.36));   /* the held window lets go */
     const fan = ramp(p, 0.42, 0.8);
     const openFade = 1 - ramp(p, 0.05, 0.15);
     const railIn = ramp(p, 0.48, 0.58);
@@ -159,24 +160,33 @@
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    const bgScale = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
-    bgImg.style.transform = bgScale;
-    if (bgVid) {
-      bgVid.style.transform = bgScale;
-      /* The loop is only ever seen through the glass: clipped to the
-         aperture so the interior stays the crisp still, and the video's
-         compression hides inside bokeh that was soft to begin with. */
-      const g = apertureRect();
-      const gw = g.w;
-      const gh = g.w * (APERTURE.h / APERTURE.w);
-      const top = g.cy - gh / 2;
-      const left = g.cx - gw / 2;
-      bgVid.style.clipPath =
-        `inset(${top.toFixed(1)}px ${(stage.clientWidth - left - gw).toFixed(1)}px ` +
-        `${(stage.clientHeight - top - gh).toFixed(1)}px ${left.toFixed(1)}px ` +
-        `round 4% 11% 1.6% 1.6% / 12% 28% 4% 4%)`;
-    }
+    bgImg.style.transform = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
     veil.style.opacity = fadeWorld.toFixed(3);
+
+    /* The rest of the car goes; the glass stays. The hold is the window's
+       own pixels mapped at the plate's resting scale, riding above the
+       veil until the pane has clearly popped out. */
+    if (windowHold) {
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      const s = Math.max(W / IMG.w, H / IMG.h);
+      const k = 1.03; /* the plate's resting zoom */
+      const ox = (W - IMG.w * s) * 0.5;
+      const oy = (H - IMG.h * s) * 0.42;
+      const cx0 = W * 0.5;
+      const cy0 = H * 0.4; /* matches the plate's transform-origin */
+      const left = cx0 + (ox + APERTURE.x * s - cx0) * k;
+      const top = cy0 + (oy + APERTURE.y * s - cy0) * k;
+      const bx = cx0 + (ox - cx0) * k;
+      const by = cy0 + (oy - cy0) * k;
+      windowHold.style.left = `${left.toFixed(1)}px`;
+      windowHold.style.top = `${top.toFixed(1)}px`;
+      windowHold.style.width = `${(APERTURE.w * s * k).toFixed(1)}px`;
+      windowHold.style.height = `${(APERTURE.h * s * k).toFixed(1)}px`;
+      windowHold.style.backgroundSize = `${(IMG.w * s * k).toFixed(1)}px ${(IMG.h * s * k).toFixed(1)}px`;
+      windowHold.style.backgroundPosition = `${(bx - left).toFixed(1)}px ${(by - top).toFixed(1)}px`;
+      windowHold.style.opacity = (fadeWorld * (1 - release)).toFixed(3);
+    }
     if (sheen) {
       sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
       sheen.style.opacity = (0.35 + 0.65 * study).toFixed(3);
@@ -205,7 +215,7 @@
       }
       bokeh.style.left = `${(g.cx - gw / 2).toFixed(1)}px`;
       bokeh.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
-      bokeh.style.opacity = (1 - fadeWorld).toFixed(3);
+      bokeh.style.opacity = (1 - release).toFixed(3);
       const bctx = bokeh.getContext('2d');
       bctx.clearRect(0, 0, gw, gh);
       bctx.globalCompositeOperation = 'lighter';
@@ -288,8 +298,7 @@
   }
 
   function still() {
-    /* Reduced motion: the finished teardown, no scrubbing, no loop. */
-    if (bgVid) bgVid.pause();
+    /* Reduced motion: the finished teardown, no scrubbing. */
     apply(1);
     copyOpen.style.opacity = '1';
     copyOpen.style.visibility = 'visible';
