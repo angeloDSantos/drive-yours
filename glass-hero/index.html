@@ -15,10 +15,12 @@
       <span class="brand-emblem">DY</span>
       <span>DRIVE YOURS</span>
     </a>
-    <div class="header-detail">
-      <span>EXECUTIVE SERIES</span>
-      <span>01 — VITO</span>
-    </div>
+    <nav class="site-nav" aria-label="Site">
+      <a href="#privacy">Privacy</a>
+      <a href="#shades">Shades</a>
+      <a href="#process">Process</a>
+      <a href="#contact" class="nav-cta">Contact</a>
+    </nav>
   </header>
 
   <main id="top">
@@ -45,7 +47,7 @@
         <div class="copy copy-close" aria-hidden="true">
           <p class="eyebrow">Executive cabins · original-equipment finish</p>
           <p class="close-line">Arrive differently.</p>
-          <a class="cta" href="mailto:studio@driveyours.example">Configure yours <span>↗</span></a>
+          <a class="cta" href="#shades">Choose your shade <span>↓</span></a>
         </div>
 
         <!-- Layer rail: the 2D index of the 3D stack -->
@@ -88,11 +90,106 @@
 
       </div>
     </section>
+
+    <!-- The privacy story, told from the pavement. -->
+    <section class="band story reveal" id="privacy">
+      <div class="band-inner story-grid">
+        <div class="story-copy">
+          <p class="eyebrow">From the street</p>
+          <h2>Nobody's business but yours.</h2>
+          <p class="body">At five percent light transmission the glass reads as black lacquer from the pavement. The city sees its own lights coming back at it. The cabin, the calls and the hours between meetings stay where they belong.</p>
+          <p class="body">The view out stays clean. Ceramic works on heat and glare rather than clarity, so the skyline at night is still the skyline.</p>
+        </div>
+        <figure class="story-media">
+          <img src="assets/vito-exterior-rain.png" alt="The van from the street in the rain: the window returns the city's light and gives nothing back" loading="lazy" width="1536" height="1024" />
+        </figure>
+      </div>
+    </section>
+
+    <!-- The numbers, counted up as they arrive. -->
+    <section class="band numbers reveal" id="numbers">
+      <div class="band-inner">
+        <p class="eyebrow">The numbers</p>
+        <ul class="stat-row">
+          <li><span class="stat"><b data-count="5">0</b><i>%</i></span><p>visible light through</p></li>
+          <li><span class="stat"><b data-count="98">0</b><i>%</i></span><p>infrared heat rejected</p></li>
+          <li><span class="stat"><b data-count="99">0</b><i>%</i></span><p>ultraviolet blocked</p></li>
+          <li><span class="stat stat-text">AS2</span><p>laminated safety rating</p></li>
+          <li><span class="stat stat-text">43R</span><p>certified for the road</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- The shade picker: tap a depth, watch the window answer. -->
+    <section class="band shades reveal" id="shades">
+      <div class="band-inner">
+        <p class="eyebrow">Choose your shade</p>
+        <h2>Four depths of quiet.</h2>
+        <div class="shade-preview" aria-hidden="true">
+          <div class="shade-window">
+            <div class="shade-veil"></div>
+            <span class="shade-label">VLT 5</span>
+          </div>
+        </div>
+        <div class="shade-row" role="group" aria-label="Shade options">
+          <button class="shade-btn" data-vlt="70" data-note="Barely visible. Heat and fade control with the factory look kept.">VLT 70</button>
+          <button class="shade-btn" data-vlt="35" data-note="The daily choice. A clear step darker that still reads as glass.">VLT 35</button>
+          <button class="shade-btn" data-vlt="20" data-note="Serious shade. Faces soften to shapes from a metre away.">VLT 20</button>
+          <button class="shade-btn is-active" data-vlt="5" data-note="The executive depth. From outside the cabin simply is not there.">VLT 5</button>
+        </div>
+        <p class="shade-note">The executive depth. From outside the cabin simply is not there.</p>
+      </div>
+    </section>
+
+    <!-- Three steps, one afternoon. -->
+    <section class="band process reveal" id="process">
+      <div class="band-inner">
+        <p class="eyebrow">The process</p>
+        <ol class="steps">
+          <li>
+            <span class="step-num">01</span>
+            <h3>Consult</h3>
+            <p>Tell us the vehicle and the job it does. We recommend a shade and book a slot that suits the diary, not ours.</p>
+          </li>
+          <li>
+            <span class="step-num">02</span>
+            <h3>Template</h3>
+            <p>Every pane is plotter-cut to your exact glazing before we arrive. Nothing is trimmed against your paintwork.</p>
+          </li>
+          <li>
+            <span class="step-num">03</span>
+            <h3>Install</h3>
+            <p>Fitted at your address or ours in an afternoon, with cure notes and the certification paperwork in hand before we leave.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- The ask. -->
+    <section class="band contact reveal" id="contact">
+      <div class="band-inner contact-inner">
+        <p class="eyebrow">Executive cabins · London</p>
+        <h2>Arrive differently.</h2>
+        <p class="body">One vehicle or a fleet. Tell us what you drive and we come back the same day with a shade, a price and a date.</p>
+        <div class="cta-row">
+          <a class="cta" href="mailto:studio@driveyours.example">studio@driveyours.example <span>↗</span></a>
+          <a class="cta cta-ghost" href="#shades">Back to the shades</a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-foot">
-    <span>DRIVE YOURS · LONDON</span>
-    <a href="mailto:studio@driveyours.example">studio@driveyours.example</a>
+    <div class="foot-inner">
+      <a class="brand" href="#top"><span class="brand-emblem">DY</span><span>DRIVE YOURS</span></a>
+      <nav class="foot-nav" aria-label="Footer">
+        <a href="#privacy">Privacy</a>
+        <a href="#shades">Shades</a>
+        <a href="#process">Process</a>
+        <a href="mailto:studio@driveyours.example">studio@driveyours.example</a>
+      </nav>
+      <p class="foot-line">Bespoke privacy glass for executive cabins. London and the South East.</p>
+    </div>
   </footer>
 
   <script src="hero.js"></script>

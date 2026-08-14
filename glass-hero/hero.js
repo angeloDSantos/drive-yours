@@ -275,4 +275,50 @@
     if (reduced.matches) still();
     else { current = -1; raf = requestAnimationFrame(frame); }
   });
+
+  /* Below the fold: reveals, counters and the shade picker. ---------------- */
+
+  const revealEls = [...document.querySelectorAll('.reveal')];
+  const stats = [...document.querySelectorAll('.stat b[data-count]')];
+
+  function countUp(el) {
+    const target = Number(el.dataset.count);
+    const t0 = performance.now();
+    const dur = 1300;
+    (function tick(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  if ('IntersectionObserver' in window && !reduced.matches) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('in');
+        e.target.querySelectorAll('.stat b[data-count]').forEach(countUp);
+        io.unobserve(e.target);
+      }
+    }, { threshold: 0.16 });
+    revealEls.forEach((el) => io.observe(el));
+  } else {
+    revealEls.forEach((el) => el.classList.add('in'));
+    stats.forEach((el) => { el.textContent = el.dataset.count; });
+  }
+
+  /* Tap a depth, the window answers. */
+  const shadeBtns = [...document.querySelectorAll('.shade-btn')];
+  const shadeVeil = document.querySelector('.shade-veil');
+  const shadeNote = document.querySelector('.shade-note');
+  const shadeLabel = document.querySelector('.shade-label');
+  const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
+  shadeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      shadeBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
+      shadeVeil.style.opacity = SHADE_DIM[btn.dataset.vlt];
+      shadeNote.textContent = btn.dataset.note;
+      shadeLabel.textContent = `VLT ${btn.dataset.vlt}`;
+    });
+  });
 })();
