@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drive Yours — The glass, taken apart</title>
+  <meta name="description" content="Bespoke privacy glass for executive cabins. One pane, seven layers, taken apart." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7' y='7' width='18' height='18' fill='none' stroke='%23e7e7e3' stroke-width='1.6' transform='rotate(45 16 16)'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="hero.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Drive Yours home">
+      <span class="brand-emblem">DY</span>
+      <span>DRIVE YOURS</span>
+    </a>
+    <div class="header-detail">
+      <span>EXECUTIVE SERIES</span>
+      <span>01 — VITO</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- The whole site is this one scroll track. -->
+    <section class="hero-track" aria-label="The glass, taken apart">
+      <div class="hero-stage">
+
+        <div class="stage-glow" aria-hidden="true"></div>
+
+        <!-- 2D copy layers (kept out of the 3D scene so type stays razor sharp) -->
+        <div class="copy copy-open">
+          <p class="eyebrow">Bespoke privacy glass</p>
+          <h1>The glass,<br />taken apart.</h1>
+          <p class="subcopy">Seven layers between the street and your seat. Scroll to separate them.</p>
+        </div>
+
+        <div class="copy copy-close" aria-hidden="true">
+          <p class="eyebrow">Executive cabins · original-equipment finish</p>
+          <p class="close-line">Arrive differently.</p>
+          <a class="cta" href="mailto:studio@driveyours.example">Configure yours <span>↗</span></a>
+        </div>
+
+        <!-- Layer rail: the 2D index of the 3D stack -->
+        <aside class="rail" aria-label="Layer index, street side to cabin side">
+          <p class="rail-side">Street side</p>
+          <ol class="rail-list">
+            <li data-layer="0"><span class="rail-name">Outer glass ply</span><span class="rail-detail">2.1 mm</span></li>
+            <li data-layer="1"><span class="rail-name">Acoustic PVB interlayer</span><span class="rail-detail">0.76 mm</span></li>
+            <li data-layer="2"><span class="rail-name">Inner glass ply</span><span class="rail-detail">1.6 mm</span></li>
+            <li data-layer="3"><span class="rail-name">Mounting adhesive</span><span class="rail-detail">10 µm</span></li>
+            <li data-layer="4"><span class="rail-name">PET nano-ceramic</span><span class="rail-detail">36 µm</span></li>
+            <li data-layer="5"><span class="rail-name">Second PET ply</span><span class="rail-detail">23 µm</span></li>
+            <li data-layer="6"><span class="rail-name">Scratch hardcoat</span><span class="rail-detail">4 µm</span></li>
+          </ol>
+          <p class="rail-side">Cabin side</p>
+        </aside>
+
+        <!-- The 3D scene: one pane, seven planes -->
+        <div class="scene" aria-hidden="true">
+          <div class="pane">
+            <div class="layer l-glass" data-layer="0">
+              <span class="etch">LAMINATED · AS2 · 43R</span>
+            </div>
+            <div class="layer l-pvb" data-layer="1"></div>
+            <div class="layer l-glass l-glass-inner" data-layer="2"></div>
+            <div class="layer l-adhesive" data-layer="3"></div>
+            <div class="layer l-ceramic" data-layer="4"></div>
+            <div class="layer l-pet" data-layer="5"></div>
+            <div class="layer l-hardcoat" data-layer="6"></div>
+          </div>
+        </div>
+
+        <!-- Spec strip -->
+        <p class="spec" aria-label="Specification">
+          <span>VLT 5</span><i>·</i><span>IR 98%</span><i>·</i><span>UV 99%</span><i>·</i><span>AS2</span><i>·</i><span>43R</span>
+        </p>
+
+        <p class="scroll-hint" aria-hidden="true">Scroll<span>↓</span></p>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <span>DRIVE YOURS · LONDON</span>
+    <a href="mailto:studio@driveyours.example">studio@driveyours.example</a>
+  </footer>
+
+  <script src="hero.js"></script>
+</body>
+</html>
