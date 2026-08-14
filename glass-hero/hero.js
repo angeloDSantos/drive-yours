@@ -66,17 +66,21 @@
     const onPhone = phone.matches;
     const fanDepth = onPhone ? 165 : 300;
 
-    /* Phases */
-    const lift = easeInOut(ramp(p, 0.08, 0.3));   /* out of the aperture */
-    const tilt = easeInOut(ramp(p, 0.14, 0.34));
-    const fan = ramp(p, 0.28, 0.78);
-    const openFade = 1 - ramp(p, 0.14, 0.26);
-    const railIn = ramp(p, 0.34, 0.44);
-    const closeIn = ramp(p, 0.84, 0.94);
+    /* Phases. The order is the story: first the whole site dies to black
+       around the window (which stays put), then the window comes forward
+       to the study angle, then it fans apart. */
+    const fadeWorld = easeInOut(ramp(p, 0.05, 0.26)); /* cabin -> black, window holds */
+    const study = easeInOut(ramp(p, 0.24, 0.46));     /* window detaches, turns 3/4 */
+    const fan = ramp(p, 0.42, 0.8);
+    const openFade = 1 - ramp(p, 0.05, 0.15);
+    const railIn = ramp(p, 0.48, 0.58);
+    const closeIn = ramp(p, 0.85, 0.94);
 
-    /* The pane starts seated in the photo's window, then comes off it,
-       turns to a three-quarter view and fans. The fan spreads towards the
-       viewer's left, so the group follows it right and down. */
+    /* The pane starts seated in the photo's window and holds that seat
+       while the world fades — only a slight breathe towards the viewer
+       says it is now the one thing left. Then it detaches, turns to a
+       three-quarter view and fans. The fan spreads towards the viewer's
+       left, so the group follows it right and down. */
     const a = apertureRect();
     const seatScale = a.w / pane.offsetWidth;
     const seatX = a.cx - stage.clientWidth / 2;
@@ -86,29 +90,29 @@
 
     /* The pop: the pane peels out of the frame top-first and swells
        towards the viewer before settling into the study angle. */
-    const peel = Math.sin(Math.PI * Math.min(1, lift * 1.3)) * (1 - lift);
-    const pop = 1 + 0.09 * Math.sin(Math.PI * Math.min(1, lift * 1.15)) * (1 - fanEase);
+    const peel = Math.sin(Math.PI * Math.min(1, study * 1.3)) * (1 - study);
+    const pop = 1 + 0.09 * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
+    const seatHold = 1 + 0.04 * fadeWorld * (1 - study);
 
-    const ry = (onPhone ? -14 - 36 * tilt : -16 - 44 * tilt) * lift;
-    const rx = (5 + 6 * tilt) * lift - 9 * peel;
-    const scale = (seatScale + (1 - 0.12 * tilt - seatScale) * lift) * pop;
-    const shiftX = seatX * (1 - lift) + ((onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150)) * lift;
-    const shiftY = seatY * (1 - lift) + fanEase * (onPhone ? 36 : 22) * lift;
+    const ry = (onPhone ? -50 : -60) * study;
+    const rx = (5 + 6 * study) * study - 9 * peel;
+    const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop * seatHold;
+    const shiftX = seatX * (1 - study) + ((onPhone ? 0 : 70) + fanEase * (onPhone ? 112 : 150)) * study;
+    const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
-    /* Once the pane is away, the whole world goes to black so the
-       teardown reads against a clean ground. */
-    const toBlack = easeInOut(ramp(p, 0.12, 0.4));
-    bgImg.style.transform = `scale(${(1.03 + 0.07 * lift).toFixed(4)})`;
-    veil.style.opacity = toBlack.toFixed(3);
+    bgImg.style.transform = `scale(${(1.03 + 0.05 * fadeWorld).toFixed(4)})`;
+    veil.style.opacity = fadeWorld.toFixed(3);
     if (sheen) {
       sheen.style.backgroundPosition = `${(100 - p * 100).toFixed(2)}% 0`;
-      sheen.style.opacity = (0.35 + 0.65 * lift).toFixed(3);
+      sheen.style.opacity = (0.35 + 0.65 * study).toFixed(3);
     }
-    if (etch) etch.style.opacity = lift.toFixed(3);
+    if (etch) etch.style.opacity = study.toFixed(3);
     if (aperGlow) {
+      /* While the world fades, a soft light behind the seated window makes
+         it the last lit thing on the page. It dies as the pane detaches. */
       const g = apertureRect();
       const gw = g.w;
       const gh = g.w * (APERTURE.h / APERTURE.w);
@@ -116,7 +120,7 @@
       aperGlow.style.top = `${(g.cy - gh / 2).toFixed(1)}px`;
       aperGlow.style.width = `${gw.toFixed(1)}px`;
       aperGlow.style.height = `${gh.toFixed(1)}px`;
-      aperGlow.style.opacity = (lift * (1 - toBlack)).toFixed(3);
+      aperGlow.style.opacity = (fadeWorld * (1 - study)).toFixed(3);
     }
 
     /* Each layer leaves in street-to-cabin order. Seated, the stack must
@@ -125,13 +129,14 @@
        also set per layer: opacity on the preserve-3d parent would flatten
        the scene and collapse the fan. */
     const dim = 1 - closeIn * 0.3;
+    /* Seated, the pane is not a drawn thing at all: the ceramic tint alone
+       darkens the photo's window. The glass half-materialises as the world
+       fades (so it reads against black) and completes as it detaches. */
+    const materialise = 0.5 * fadeWorld + 0.5 * study;
     for (let i = 0; i < layers.length; i++) {
       const lp = easeOut(ramp(fan, i * 0.055, i * 0.055 + 0.6));
       layers[i].style.transform = `translateZ(${(lp * SPREAD[i] * fanDepth).toFixed(2)}px)`;
-      /* Seated, the pane is not a drawn thing at all: the ceramic tint
-         alone darkens the photo's window, and the glass only materialises
-         as it comes away. */
-      const material = i === 4 ? 0.6 + 0.4 * lift : 0.12 + 0.88 * lift;
+      const material = i === 4 ? 0.6 + 0.4 * materialise : 0.12 + 0.88 * materialise;
       layers[i].style.opacity = (material * dim).toFixed(3);
       const on = lp > 0.5;
       if (railRows[i]) railRows[i].classList.toggle('is-on', on);
@@ -143,7 +148,7 @@
     rail.style.opacity = (railIn * (1 - closeIn * 0.4)).toFixed(3);
     glow.style.opacity = (fan * 0.9).toFixed(3);
 
-    const specIn = ramp(p, 0.62, 0.74);
+    const specIn = ramp(p, 0.66, 0.78);
     spec.style.opacity = specIn.toFixed(3);
     spec.style.transform = `translateX(-50%) translateY(${(14 * (1 - easeOut(specIn))).toFixed(2)}px)`;
 
