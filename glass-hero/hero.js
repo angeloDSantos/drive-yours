@@ -310,13 +310,18 @@
   /* Tap a depth, the window answers. */
   const shadeBtns = [...document.querySelectorAll('.shade-btn')];
   const shadeVeil = document.querySelector('.shade-veil');
+  const shadeOutVeils = [...document.querySelectorAll('.shade-out-veil')];
   const shadeNote = document.querySelector('.shade-note');
   const shadeLabel = document.querySelector('.shade-label');
+  /* Inside: how much of the city the tint gives up.
+     Outside: how much of you the street gets back. */
   const SHADE_DIM = { 70: 0.16, 35: 0.4, 20: 0.58, 5: 0.78 };
+  const SHADE_OUT = { 70: 0.12, 35: 0.42, 20: 0.62, 5: 0.88 };
   shadeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       shadeBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
       shadeVeil.style.opacity = SHADE_DIM[btn.dataset.vlt];
+      shadeOutVeils.forEach((v) => { v.style.opacity = SHADE_OUT[btn.dataset.vlt]; });
       shadeNote.textContent = btn.dataset.note;
       shadeLabel.textContent = `VLT ${btn.dataset.vlt}`;
     });
