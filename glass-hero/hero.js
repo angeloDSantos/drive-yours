@@ -26,7 +26,7 @@
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
   const IMG = { w: 1672, h: 941 };
-  const APERTURE = { x: 224, y: 188, w: 1227, h: 340 };
+  const APERTURE = { x: 288, y: 170, w: 1104, h: 410 };
 
   function apertureRect() {
     const W = stage.clientWidth;
