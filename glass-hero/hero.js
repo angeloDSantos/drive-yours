@@ -158,7 +158,8 @@
       const left = g.cx - gw / 2;
       bgVid.style.clipPath =
         `inset(${top.toFixed(1)}px ${(stage.clientWidth - left - gw).toFixed(1)}px ` +
-        `${(stage.clientHeight - top - gh).toFixed(1)}px ${left.toFixed(1)}px round 24px)`;
+        `${(stage.clientHeight - top - gh).toFixed(1)}px ${left.toFixed(1)}px ` +
+        `round 4% 18% 2% 2% / 12% 48% 5% 5%)`;
     }
     veil.style.opacity = fadeWorld.toFixed(3);
     if (sheen) {

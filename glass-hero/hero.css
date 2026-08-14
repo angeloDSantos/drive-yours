@@ -12,6 +12,9 @@
   --line: rgba(255, 255, 255, 0.14);
   /* the float-glass edge colour from the teardown, used sparingly below */
   --glass: #9fd4c0;
+  /* the saloon rear-door glass silhouette: upright front edge, long
+     C-pillar sweep top-rear, straight beltline along the bottom */
+  --pane-shape: 4% 18% 2% 2% / 12% 48% 5% 5%;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
 }
@@ -113,7 +116,7 @@ a { color: inherit; text-decoration: none; }
   height: 100%;
   object-fit: cover;
   object-position: 50% 42%;
-  filter: saturate(0.78) contrast(1.05);
+  filter: saturate(0.82) contrast(1.04) brightness(1.24);
   transform-origin: 50% 40%;
 }
 /* The loop sits over the still; the still is the instant first paint and
@@ -127,14 +130,14 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(4, 5, 5, 0.72) 0%, rgba(5, 6, 6, 0.32) 34%, rgba(5, 6, 6, 0.12) 60%, rgba(4, 5, 5, 0.4) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.14) 34%, rgba(0, 0, 0, 0.66) 100%);
+    linear-gradient(90deg, rgba(4, 5, 5, 0.5) 0%, rgba(5, 6, 6, 0.18) 34%, rgba(5, 6, 6, 0.04) 60%, rgba(4, 5, 5, 0.24) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.06) 34%, rgba(0, 0, 0, 0.5) 100%);
 }
 /* Live city: the photo's own bokeh points, redrawn on a canvas clipped to
    the window so the distant lights breathe. Positioned per frame from JS. */
 .bokeh-live {
   position: absolute;
-  border-radius: 22px;
+  border-radius: var(--pane-shape);
   pointer-events: none;
 }
 .stage-veil {
@@ -151,7 +154,7 @@ a { color: inherit; text-decoration: none; }
 .aperture-glow {
   position: absolute;
   z-index: 1;
-  border-radius: 22px;
+  border-radius: var(--pane-shape);
   background: radial-gradient(ellipse 70% 80% at 50% 45%, rgba(214, 222, 232, 0.14), rgba(214, 222, 232, 0.03) 70%, transparent 90%);
   opacity: 0;
   pointer-events: none;
@@ -284,7 +287,7 @@ a { color: inherit; text-decoration: none; }
 .layer {
   position: absolute;
   inset: 0;
-  border-radius: 22px;
+  border-radius: var(--pane-shape);
   transform-style: preserve-3d;
   backface-visibility: visible;
 }
@@ -335,7 +338,7 @@ a { color: inherit; text-decoration: none; }
 .l-glass::after {
   content: "";
   position: absolute;
-  inset: 22px auto 22px 0;
+  inset: 38px auto 20px 0;
   width: 7px;
   transform-origin: center left;
   transform: rotateY(90deg);
@@ -549,10 +552,10 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   overflow: clip;
-  aspect-ratio: 3.2 / 1;
+  aspect-ratio: 2.7 / 1;
   background-image: url("assets/saloon-cabin-night.png");
   background-size: 100% auto;
-  background-position: 50% 36%;
+  background-position: 50% 32%;
 }
 /* The street side: the exterior plate, its window regions darkening in
    step with the buttons. The container aspect is fixed, so the cover crop
