@@ -66,7 +66,7 @@
     let d;
     /* Sampling can fail for reasons that must not take the page with them:
        a broken plate, no 2d context, or a tainted canvas on file://. The
-       teardown, the rain and the rest of the site carry on without it. */
+       teardown and the rest of the site carry on without it. */
     try {
       const c = document.createElement('canvas');
       c.width = IMG.w;
@@ -108,20 +108,6 @@
   let spriteGrads = [];
   let bctx = null;
 
-  /* Rain on the glass: thin streaks sliding down inside the aperture,
-     drawn on the same canvas so they can never drift off the window. */
-  const drops = [];
-  for (let i = 0; i < 42; i++) {
-    drops.push({
-      x: Math.random(),
-      y: Math.random(),
-      v: 0.16 + Math.random() * 0.22,
-      len: 0.03 + Math.random() * 0.05,
-      a: 0.05 + Math.random() * 0.12,
-      w: 0.8 + Math.random() * 0.8,
-    });
-  }
-  let rainClock = 0;
 
   /* Street side -> cabin side. Spread is each layer's share of the fan
      depth, taken from the physical stack (films sit tighter than glass). */
@@ -216,8 +202,6 @@
       aperGlow.style.opacity = (fadeWorld * (1 - study)).toFixed(3);
     }
 
-    /* The rain needs no sampled pixels, so it draws whether or not the
-       bokeh seeding succeeded. */
     if (bokeh) {
       const gw = Math.round(a.w);
       const gh = Math.round(a.h);
@@ -256,22 +240,6 @@
         bctx.fillRect(g.cx - g.r, g.cy - g.r, g.r * 2, g.r * 2);
       }
       bctx.globalAlpha = 1;
-
-      /* clamped both ways: a still() frame passes now = 0, which would
-         otherwise drive every drop far off the top of the glass */
-      const rainDt = rainClock ? Math.max(0, Math.min(0.05, (now - rainClock) / 1000)) : 0;
-      rainClock = now;
-      for (const d of drops) {
-        d.y += d.v * rainDt;
-        if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
-        const dx = gw * (d.x + d.y * 0.015);
-        bctx.strokeStyle = `rgba(196, 216, 232, ${d.a.toFixed(3)})`;
-        bctx.lineWidth = d.w;
-        bctx.beginPath();
-        bctx.moveTo(dx, gh * d.y);
-        bctx.lineTo(dx - gw * 0.004, gh * (d.y - d.len));
-        bctx.stroke();
-      }
       }
     }
 
@@ -339,8 +307,6 @@
         /* one bad frame must not freeze the teardown for the whole visit */
         console.error(err);
       }
-    } else {
-      rainClock = now;
     }
     raf = requestAnimationFrame(frame);
   }
@@ -421,6 +387,23 @@
   const saveBtn = document.querySelector('.shade-save');
   const sendLink = document.querySelector('.shade-send');
 
+  /* The five photographs are the whole configurator, so they are warmed as
+     soon as the picker is anywhere near the viewport. Without this the
+     first tap on a depth waits on a download and reads as a dead button. */
+  if ('IntersectionObserver' in window) {
+    const shadesSection = document.getElementById('shades');
+    if (shadesSection) {
+      const warm = new IntersectionObserver(([e], obs) => {
+        if (!e.isIntersecting) return;
+        obs.disconnect();
+        for (const src of [...Object.values(SHADE_SRC), 'assets/ext-split.webp']) {
+          new Image().src = src;
+        }
+      }, { rootMargin: '600px' });
+      warm.observe(shadesSection);
+    }
+  }
+
   const shadeState = { vlt: '5', style: 'full', mark: false };
   const shadeNotes = { vlt: 'The executive depth. From outside the cabin simply is not there.', style: '', mark: '' };
 
@@ -430,14 +413,29 @@
     return `VLT ${shadeState.vlt} · ${STYLE_NAME[shadeState.style]}${shadeState.mark ? ' · DY etch' : ''}`;
   }
 
+  /* Swapping src directly shows whatever the browser has mid-decode, which
+     is what made Split flash. Decode the next photograph off-screen first
+     and only then put it on the page; the sequence number means a fast
+     second click cannot be overtaken by the first one finishing late. */
+  let extSeq = 0;
+  function setExt(src) {
+    if (extTop.getAttribute('src') === src) return;
+    const seq = ++extSeq;
+    const pre = new Image();
+    const swap = () => { if (seq === extSeq) extTop.setAttribute('src', src); };
+    pre.src = src;
+    if (pre.decode) pre.decode().then(swap, swap);
+    else if (pre.complete) swap();
+    else { pre.onload = swap; pre.onerror = swap; }
+  }
+
   function renderShade() {
     const flat = shadeState.style === 'split' ? 'full' : shadeState.style;
     shadeVeil.dataset.style = flat;
     shadeVeil.style.opacity = SHADE_DIM[shadeState.vlt];
     if (extTop) {
       /* Split is its own photograph: front door light, rear door black. */
-      const src = shadeState.style === 'split' ? 'assets/ext-split.webp' : SHADE_SRC[shadeState.vlt];
-      if (!extTop.src.endsWith(src)) extTop.src = src;
+      setExt(shadeState.style === 'split' ? 'assets/ext-split.webp' : SHADE_SRC[shadeState.vlt]);
       extTop.dataset.style = shadeState.style === 'split' ? 'full' : shadeState.style;
       extTop.style.opacity = shadeState.vlt === '70' && shadeState.style !== 'split' ? 0 : 1;
     }
