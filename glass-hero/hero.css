@@ -83,42 +83,25 @@ a { color: inherit; text-decoration: none; }
     transparent
   );
 }
-/* No emblem in the header. The window silhouette is 2.75:1, and at the
-   16px a header allows it reads as a smudge rather than a window — it earns
-   its place in the footer, at a size where the shape is legible. Up here the
-   identity is the wordmark and its codes, set the way the bug is etched into
-   the corner of every piece of automotive glass: this trade's own
-   typography, and nobody else's site header. */
+/* The brand mark. It arrives as one lockup with the wordmark inside it, so
+   the header carries the image and the etched codes beside it — the codes
+   stay because they are the one thing tying the mark back to the glass. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 14px;
 }
-.brand-glyph {
-  width: 44px;
+.brand-logo {
+  display: block;
+  width: 158px;
   height: auto;
-  overflow: visible;
-  fill: none;
-  stroke: rgba(231, 231, 227, 0.7);
-  stroke-width: 1.2;
-  transition: stroke 0.35s ease;
+  transition: opacity 0.3s ease;
 }
-.brand-glyph use { vector-effect: non-scaling-stroke; }
-.brand:hover .brand-glyph,
-.brand:focus-visible .brand-glyph { stroke: var(--glass); }
-/* The wordmark speaks with the same voice as the headline — light, tightly
-   tracked, sentence case — rather than the wide-tracked caps every other
-   header wears. */
-.brand-word {
-  font-weight: 300;
-  font-size: 19px;
-  letter-spacing: -0.015em;
-  white-space: nowrap;
-}
+.brand:hover .brand-logo { opacity: 0.82; }
 .brand-bug {
   display: grid;
   gap: 2px;
-  padding-left: 12px;
+  padding-left: 13px;
   border-left: 1px solid rgba(255, 255, 255, 0.16);
   color: var(--faint);
   font: 400 var(--t-micro) / 1.3 var(--mono);
@@ -863,13 +846,8 @@ a { color: inherit; text-decoration: none; }
   gap: clamp(28px, 4vw, 60px);
   align-items: start;
 }
-.brand-stacked {
-  display: grid;
-  justify-items: start;
-  gap: 12px;
-}
-.brand-stacked .brand-glyph { width: 104px; }
-.brand-stacked .brand-word { font-size: 22px; }
+.brand-stacked { display: block; }
+.brand-stacked .brand-logo { width: 232px; }
 .foot-bug {
   margin: 12px 0 0;
   color: var(--faint);
@@ -979,8 +957,8 @@ a { color: inherit; text-decoration: none; }
   .site-nav a:not(.nav-cta) { display: none; }
   /* the bug is a nicety at desk width and clutter on a phone */
   .brand-bug { display: none; }
-  .brand-glyph { width: 38px; }
-  .brand-word { font-size: 17px; }
+  .brand-logo { width: 132px; }
+  .brand-stacked .brand-logo { width: 196px; }
   .foot-inner { grid-template-columns: 1fr; gap: 34px; }
   .foot-legal { padding-bottom: 38px; }
   .story-grid { grid-template-columns: 1fr; }
