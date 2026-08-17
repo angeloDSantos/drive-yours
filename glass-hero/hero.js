@@ -25,9 +25,11 @@
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
   const IMG = { w: 1672, h: 941 };
-  /* traced from the plate: B-pillar at x306, roofline at y154, rear sweep
-     out to x1502, beltline at y592 */
-  const APERTURE = { x: 306, y: 154, w: 1196, h: 438 };
+  /* traced from the plate's own pixels (flood-fill of the lit window, then
+     the beltline found by luminance gradient because the flood leaks onto
+     the door trim): B-pillar x311, roofline y168, rear corner x1474,
+     beltline y575 at the rear falling to y591 at the pillar */
+  const APERTURE = { x: 311, y: 168, w: 1163, h: 423 };
 
   /* The plate is never shown at 1:1 — it sits at a slight zoom that grows
      as the world fades. Everything that has to land on the photographed
@@ -279,16 +281,17 @@
        also set per layer: opacity on the preserve-3d parent would flatten
        the scene and collapse the fan. */
     const dim = 1 - closeIn * 0.3;
-    /* Seated, the pane is not a drawn thing at all: the ceramic tint alone
-       darkens the photo's window. The glass half-materialises as the world
-       fades (so it reads against black) and completes as it detaches. */
+    /* At rest there is no overlay at all: the top of the page is the
+       photograph, untouched — no outline, no haze, nothing to misregister.
+       The glass materialises only once the scroll starts, which is also
+       when there is black behind it for the sheets to read against. */
     const materialise = 0.5 * fadeWorld + 0.5 * study;
     for (let i = 0; i < layers.length; i++) {
       const lp = easeOut(ramp(fan, i * 0.055, i * 0.055 + 0.6));
       layers[i].style.transform = `translateZ(${(lp * SPREAD[i] * fanDepth).toFixed(2)}px)`;
-      /* Seated haze kept low so the living city stays readable through
-         the tint. */
-      const material = i === 4 ? 0.6 + 0.4 * materialise : 0.07 + 0.93 * materialise;
+      /* The ceramic leads — it is the tint, so it arrives first and the
+         clear plies build up behind it. */
+      const material = i === 4 ? Math.min(1, materialise * 1.7) : materialise;
       layers[i].style.opacity = (material * dim).toFixed(3);
       const on = lp > 0.5;
       if (railRows[i]) railRows[i].classList.toggle('is-on', on);

@@ -12,6 +12,11 @@
   --line: rgba(255, 255, 255, 0.14);
   /* the float-glass edge colour from the teardown, used sparingly below */
   --glass: #9fd4c0;
+  /* the two lights already in the photograph: the warm sill strip along the
+     door and the cold city through the window. The bands below borrow them
+     so the page reads as one lit interior, not five black boxes. */
+  --amber: #d99a52;
+  --city: #6d9ed6;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
 }
@@ -53,10 +58,25 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 0;
   background: rgba(6, 7, 7, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+/* the same sill line that separates the bands, under the header */
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(217, 154, 82, 0.34) 16%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(109, 158, 214, 0.28) 84%,
+    transparent
+  );
 }
 .brand {
   display: flex;
@@ -237,8 +257,10 @@ a { color: inherit; text-decoration: none; }
   color: #0a0b0b;
   font-size: 13px;
   letter-spacing: 0.04em;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 .cta span { font-size: 12px; }
+.cta:hover { background: #fff; box-shadow: 0 12px 40px -14px rgba(231, 231, 227, 0.5); transform: translateY(-2px); }
 .cta:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
 .copy-close.is-live { pointer-events: auto; }
 
@@ -298,8 +320,8 @@ a { color: inherit; text-decoration: none; }
 .pane {
   position: relative;
   width: min(64vw, 900px);
-  /* the traced window: 1196 x 438 in the plate's own pixels */
-  aspect-ratio: 1196 / 438;
+  /* the traced window: 1163 x 423 in the plate's own pixels */
+  aspect-ratio: 1163 / 423;
   transform-style: preserve-3d;
 }
 /* Every sheet is the window itself: one traced path, filled and stroked.
@@ -370,7 +392,46 @@ a { color: inherit; text-decoration: none; }
 .scroll-hint span { font-size: 12px; }
 
 /* Bands below the teardown -------------------------------------------------- */
-.band { border-top: 1px solid rgba(255, 255, 255, 0.07); scroll-margin-top: 76px; }
+.band {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  scroll-margin-top: 76px;
+}
+/* Ambient light. Each band is lit from one corner, alternating warm sill
+   and cold city, so scrolling reads as moving through the cabin. */
+.band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 62% at 6% 4%, rgba(217, 154, 82, 0.085), transparent 68%),
+    radial-gradient(52% 60% at 96% 96%, rgba(109, 158, 214, 0.075), transparent 68%);
+}
+.band:nth-of-type(even)::before {
+  background:
+    radial-gradient(56% 62% at 94% 4%, rgba(109, 158, 214, 0.08), transparent 68%),
+    radial-gradient(50% 58% at 4% 98%, rgba(217, 154, 82, 0.07), transparent 68%);
+}
+/* The seam between bands is the sill strip, not a flat hairline: warm at
+   the door end, cool at the window end. */
+.band::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(217, 154, 82, 0.4) 16%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(109, 158, 214, 0.32) 84%,
+    transparent
+  );
+}
 .band-inner {
   max-width: 1180px;
   margin: 0 auto;
@@ -399,11 +460,26 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.75;
 }
 
-/* Scroll reveals */
+/* Scroll reveals. Rows inside a band arrive one after another rather than
+   as a block, which is most of what makes the page feel alive. */
 .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.8s ease, transform 0.8s ease; }
 .reveal.in { opacity: 1; transform: none; }
+.reveal .stat-row > li,
+.reveal .steps > li {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.in .stat-row > li,
+.reveal.in .steps > li { opacity: 1; transform: none; }
+.reveal.in :is(.stat-row, .steps) > li:nth-child(2) { transition-delay: 0.09s; }
+.reveal.in :is(.stat-row, .steps) > li:nth-child(3) { transition-delay: 0.18s; }
+.reveal.in :is(.stat-row, .steps) > li:nth-child(4) { transition-delay: 0.27s; }
+.reveal.in :is(.stat-row, .steps) > li:nth-child(5) { transition-delay: 0.36s; }
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
+  .reveal,
+  .reveal .stat-row > li,
+  .reveal .steps > li { opacity: 1; transform: none; transition: none; }
 }
 
 /* From the street */
@@ -414,11 +490,23 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
 }
 .story-media {
+  position: relative;
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: clip;
+  /* the plate throws its own light onto the page around it */
+  box-shadow: 0 24px 90px -30px rgba(109, 158, 214, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 .story-media img { display: block; width: 100%; height: auto; }
+/* A hairline of the car's warm sill along the bottom of the photograph,
+   so the frame belongs to the same room as the picture. */
+.story-media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(217, 154, 82, 0.55), transparent);
+}
 
 /* The numbers */
 .stat-row {
@@ -429,7 +517,16 @@ a { color: inherit; text-decoration: none; }
   padding: 0;
   list-style: none;
 }
-.stat-row li { border-top: 1px solid rgba(255, 255, 255, 0.14); padding-top: 18px; }
+/* Each figure sits under its own lit rule, brightest at the number and
+   falling away — the rule reads as a measurement mark, not a divider. */
+.stat-row li { position: relative; padding-top: 18px; }
+.stat-row li::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(159, 212, 192, 0.6), rgba(255, 255, 255, 0.07) 62%, transparent);
+}
 .stat {
   display: block;
   font-weight: 300;
@@ -437,6 +534,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.02em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 34px rgba(159, 212, 192, 0.2);
 }
 .stat i { font-style: normal; color: var(--glass); font-size: 0.5em; }
 .stat-text { color: var(--paper); }
@@ -464,7 +562,9 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 96px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #0a0b0b;
+  /* lit from the top corner like a panel under the cabin light */
+  background: linear-gradient(168deg, #12130f 0%, #0a0b0b 46%, #090a0b 100%);
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(217, 154, 82, 0.14);
   padding: clamp(20px, 2.4vw, 30px);
 }
 .shade-panel-title {
@@ -489,6 +589,7 @@ a { color: inherit; text-decoration: none; }
 .shade-window {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px -34px rgba(109, 158, 214, 0.45);
   border-radius: 14px;
   overflow: clip;
   aspect-ratio: 1672 / 941;
@@ -498,10 +599,10 @@ a { color: inherit; text-decoration: none; }
 .shade-veil {
   position: absolute;
   /* the traced aperture as fractions of the plate */
-  left: 18.3%;
-  top: 16.36%;
-  width: 71.53%;
-  height: 46.55%;
+  left: 18.6%;
+  top: 17.85%;
+  width: 69.56%;
+  height: 44.95%;
   clip-path: url(#winClip);
   background: #050606;
   opacity: 0.78;
@@ -515,6 +616,7 @@ a { color: inherit; text-decoration: none; }
 .shade-out {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px -34px rgba(109, 158, 214, 0.45);
   border-radius: 14px;
   overflow: clip;
   aspect-ratio: 1672 / 941;
@@ -627,8 +729,20 @@ a { color: inherit; text-decoration: none; }
   list-style: none;
   counter-reset: none;
 }
-.steps li { border-top: 1px solid rgba(255, 255, 255, 0.14); padding-top: 20px; }
-.step-num { color: var(--glass); font: 500 10px/1 var(--mono); letter-spacing: 0.3em; }
+/* The steps are a sequence, so the rule above each one lights from its own
+   number outward and warms as the job moves from talk to fitted glass. */
+.steps li { position: relative; padding-top: 20px; transition: transform 0.4s ease; }
+.steps li::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-step, rgba(159, 212, 192, 0.6)), rgba(255, 255, 255, 0.07) 62%, transparent);
+}
+.steps li:nth-child(2) { --accent-step: rgba(150, 186, 224, 0.6); }
+.steps li:nth-child(3) { --accent-step: rgba(217, 154, 82, 0.6); }
+.steps li:hover { transform: translateY(-3px); }
+.step-num { color: var(--accent-step, var(--glass)); font: 500 10px/1 var(--mono); letter-spacing: 0.3em; }
 .steps h3 {
   margin: 14px 0 10px;
   font-weight: 300;
@@ -638,6 +752,14 @@ a { color: inherit; text-decoration: none; }
 .steps p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 
 /* Contact */
+/* The last band is lit the way the window was: one soft glow behind the
+   line, as if the city were still out there. Needs the doubled class to
+   outrank the alternating :nth-of-type lighting above. */
+.band.contact::before {
+  background:
+    radial-gradient(44% 50% at 50% 32%, rgba(109, 158, 214, 0.16), transparent 70%),
+    radial-gradient(90% 42% at 50% 104%, rgba(217, 154, 82, 0.08), transparent 74%);
+}
 .contact-inner { text-align: center; }
 .contact-inner .body { margin: 0 auto 34px; }
 .contact .eyebrow { color: var(--glass); }
@@ -647,10 +769,18 @@ a { color: inherit; text-decoration: none; }
   color: var(--paper);
   border: 1px solid rgba(255, 255, 255, 0.24);
 }
-.cta-ghost:hover { border-color: rgba(255, 255, 255, 0.5); }
+.cta-ghost:hover {
+  background: transparent;
+  border-color: rgba(159, 212, 192, 0.55);
+  box-shadow: 0 12px 40px -18px rgba(159, 212, 192, 0.5);
+}
 
 /* Footer ------------------------------------------------------------------- */
-.site-foot { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.site-foot {
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(217, 154, 82, 0.035), transparent 60%);
+}
 .foot-inner {
   max-width: 1180px;
   margin: 0 auto;
