@@ -187,6 +187,21 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
+/* The moment the glass lets go of the frame, the empty aperture blooms —
+   the one bright beat in the whole teardown. */
+.release-flare {
+  position: absolute;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 52% 62% at 50% 50%,
+    rgba(214, 240, 255, 0.5),
+    rgba(150, 194, 228, 0.16) 42%,
+    transparent 74%
+  );
+}
+
 /* Once the tinted pane has left the aperture, the bare window behind it
    reads a touch brighter, as if the film really came off it. */
 .aperture-glow {
@@ -198,14 +213,17 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
+/* The room the fanned stack sits in: a cool key from the left where the
+   glass edges catch, a warm bounce from below. Both come up with the fan. */
 .stage-glow {
   position: absolute;
   z-index: 2;
   inset: 0;
   opacity: 0;
   background:
-    radial-gradient(ellipse 52% 38% at 62% 66%, rgba(140, 160, 152, 0.09), transparent 70%),
-    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(210, 190, 150, 0.05), transparent 72%);
+    radial-gradient(ellipse 46% 44% at 34% 42%, rgba(122, 176, 214, 0.16), transparent 72%),
+    radial-gradient(ellipse 54% 40% at 66% 62%, rgba(148, 208, 188, 0.13), transparent 74%),
+    radial-gradient(ellipse 80% 46% at 50% 112%, rgba(217, 154, 82, 0.12), transparent 72%);
 }
 
 /* Copy blocks -------------------------------------------------------------- */
@@ -335,20 +353,36 @@ a { color: inherit; text-decoration: none; }
 }
 .layer use { stroke-width: 2; vector-effect: non-scaling-stroke; }
 
-/* Float glass: green-teal body, a luminous edge, real thickness. */
+/* The specular sweep. Not a .layer — the engine indexes those by position
+   in the stack — so it is styled and driven on its own. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+}
+.sheen use { fill: url(#g-sheen); stroke: none; }
+
+/* Float glass: green-teal body, a luminous edge, real thickness. Every
+   sheet's edge is the lit part — separated, the stack should read as seven
+   pieces of glass catching light, not seven grey rectangles. */
 .l-glass use {
   fill: url(#g-glass);
-  stroke: rgba(196, 236, 218, 0.55);
+  stroke: rgba(206, 244, 226, 0.82);
 }
-.l-glass { filter: drop-shadow(0 0 10px rgba(126, 188, 168, 0.32)); }
-.l-glass-inner use { stroke: rgba(196, 236, 218, 0.4); }
-.l-glass-inner { filter: drop-shadow(0 0 7px rgba(126, 188, 168, 0.22)); }
-.l-pvb use { fill: url(#g-pvb); stroke: rgba(238, 232, 220, 0.3); }
-.l-adhesive use { fill: url(#g-adhesive); stroke: rgba(231, 231, 227, 0.16); }
-.l-ceramic use { fill: url(#g-ceramic); stroke: rgba(210, 220, 232, 0.34); }
-.l-ceramic { filter: drop-shadow(0 0 12px rgba(80, 96, 160, 0.22)); }
-.l-pet use { fill: url(#g-pet); stroke: rgba(220, 232, 236, 0.26); }
-.l-hardcoat use { fill: url(#g-hardcoat); stroke: rgba(240, 244, 244, 0.24); }
+.l-glass { filter: drop-shadow(0 0 18px rgba(126, 200, 176, 0.5)); }
+.l-glass-inner use { stroke: rgba(200, 240, 224, 0.62); }
+.l-glass-inner { filter: drop-shadow(0 0 13px rgba(126, 196, 172, 0.36)); }
+.l-pvb use { fill: url(#g-pvb); stroke: rgba(244, 238, 226, 0.5); }
+.l-pvb { filter: drop-shadow(0 0 10px rgba(226, 216, 196, 0.22)); }
+.l-adhesive use { fill: url(#g-adhesive); stroke: rgba(236, 236, 232, 0.3); }
+.l-ceramic use { fill: url(#g-ceramic); stroke: rgba(200, 216, 244, 0.6); }
+.l-ceramic { filter: drop-shadow(0 0 22px rgba(84, 104, 184, 0.42)); }
+.l-pet use { fill: url(#g-pet); stroke: rgba(226, 238, 242, 0.46); }
+.l-pet { filter: drop-shadow(0 0 14px rgba(150, 130, 220, 0.3)); }
+.l-hardcoat use { fill: url(#g-hardcoat); stroke: rgba(244, 248, 248, 0.44); }
+.l-hardcoat { filter: drop-shadow(0 0 10px rgba(236, 244, 244, 0.22)); }
 
 .etch {
   fill: rgba(231, 231, 227, 0.6);
@@ -819,11 +853,35 @@ a { color: inherit; text-decoration: none; }
 /* Mobile ------------------------------------------------------------------- */
 @media (max-width: 820px) {
   .hero-track { height: 480svh; }
-  .copy { left: 20px; right: 20px; top: 12svh; transform: none; }
-  .copy h1 { font-size: clamp(44px, 13vw, 64px); }
-  .subcopy { font-size: 13px; margin-top: 22px; }
-  .scene { perspective: 1100px; }
-  .pane { width: 74vw; }
+  /* A cover crop of a 2.75:1 window on a 1:2 screen shows about a third of
+     the glass, so on a phone the plate is a band across the top instead —
+     the whole window reads, and the teardown has room to fan below it. */
+  .stage-bg { inset: 0 0 auto; height: 28svh; }
+  .stage-bg img { object-position: 50% 44%; }
+  /* the plate melts into the page instead of ending on a hard edge */
+  .stage-bg {
+    mask-image: linear-gradient(180deg, #000 78%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent);
+  }
+  .stage-bg::after {
+    background:
+      linear-gradient(90deg, rgba(4, 5, 5, 0.42), transparent 30%, transparent 72%, rgba(4, 5, 5, 0.42)),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 30%, rgba(4, 5, 5, 0.85) 96%);
+  }
+  .copy { left: 20px; right: 20px; top: 36svh; transform: none; }
+  .copy h1 { font-size: clamp(40px, 11.5vw, 60px); }
+  .subcopy { font-size: 13px; margin-top: 20px; }
+  .scene { perspective: 900px; perspective-origin: 50% 34%; }
+  /* drop-shadow is a real blur, and seven of them composited in a 3D scene
+     is the one genuinely expensive thing on this page. Smaller radii on a
+     phone GPU, and the two faintest sheets do without. */
+  .l-glass { filter: drop-shadow(0 0 10px rgba(126, 200, 176, 0.46)); }
+  .l-glass-inner { filter: drop-shadow(0 0 8px rgba(126, 196, 172, 0.34)); }
+  .l-pvb { filter: none; }
+  .l-ceramic { filter: drop-shadow(0 0 12px rgba(84, 104, 184, 0.4)); }
+  .l-pet { filter: drop-shadow(0 0 8px rgba(150, 130, 220, 0.28)); }
+  .l-hardcoat { filter: none; }
+  .pane { width: 78vw; }
   .rail {
     right: 20px;
     left: 20px;

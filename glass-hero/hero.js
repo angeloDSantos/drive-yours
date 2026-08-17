@@ -16,11 +16,15 @@
   const hint = document.querySelector('.scroll-hint');
   const glow = document.querySelector('.stage-glow');
   const bgImg = document.querySelector('.stage-bg img');
+  const bgBox = document.querySelector('.stage-bg');
   const veil = document.querySelector('.stage-veil');
   const aperGlow = document.querySelector('.aperture-glow');
   const etch = document.querySelector('.etch');
   const bokeh = document.querySelector('.bokeh-live');
   const windowHold = document.querySelector('.window-hold');
+  const sheen = document.querySelector('.sheen');
+  const sheenGrad = document.getElementById('g-sheen');
+  const flare = document.querySelector('.release-flare');
 
   /* The coach-door aperture inside the cabin plate, in the photo's own
      pixels. The pane is seated exactly here at the top of the page. */
@@ -38,23 +42,57 @@
      cannot drift apart. */
   const bgZoom = (fadeWorld) => 1.03 + 0.05 * fadeWorld;
 
-  function apertureRect(zoom) {
-    const W = stage.clientWidth;
-    const H = stage.clientHeight;
+  /* Phone only. The plate is a band at the top so the whole window reads at
+     rest, but once the world starts going black there is nothing up there
+     to anchor it and the glass is stranded above a dead screen. So the band
+     travels to the middle and grows as the world dies. It is applied inside
+     apertureRect and mirrored on the plate's own transform, which means the
+     pane, the held window, the flare and the canvas all travel together. */
+  function bandDrift(fadeWorld) {
+    if (!phone.matches || fadeWorld <= 0) return { dy: 0, k: 1 };
+    const centre = bgBox.offsetTop + bgBox.clientHeight / 2;
+    return { dy: (stage.clientHeight * 0.44 - centre) * fadeWorld, k: 1 + 0.1 * fadeWorld };
+  }
+
+  function apertureRect(zoom, drift) {
+    /* Read the plate's own box, not the stage's. On a phone the plate is a
+       band across the top rather than a full-bleed crop — a cover crop of a
+       2.75:1 window on a 1:2 screen shows barely a third of the glass — and
+       because every overlay derives its geometry from here, the two layouts
+       need no separate arithmetic. */
+    const W = bgBox.clientWidth;
+    const H = bgBox.clientHeight;
+    const bx = bgBox.offsetLeft;
+    const by = bgBox.offsetTop;
     const s = Math.max(W / IMG.w, H / IMG.h);
     /* mirrors object-fit: cover at object-position 50% 42% */
-    const ox = (W - IMG.w * s) * 0.5;
-    const oy = (H - IMG.h * s) * 0.42;
+    const ox = bx + (W - IMG.w * s) * 0.5;
+    const oy = by + (H - IMG.h * s) * 0.42;
     /* then the plate's own scale, about transform-origin 50% 40% */
-    const cx0 = W * 0.5;
-    const cy0 = H * 0.4;
+    const cx0 = bx + W * 0.5;
+    const cy0 = by + H * 0.4;
     const ax = ox + (APERTURE.x + APERTURE.w / 2) * s;
     const ay = oy + (APERTURE.y + APERTURE.h / 2) * s;
+    let cx = cx0 + (ax - cx0) * zoom;
+    let cy = cy0 + (ay - cy0) * zoom;
+    let scale = s * zoom;
+    /* the same translate-then-scale about the band's centre that the plate
+       itself is given, so the two can never come apart */
+    const k = drift ? drift.k : 1;
+    if (k !== 1 || (drift && drift.dy)) {
+      const bcx = bx + W / 2;
+      const bcy = by + H / 2;
+      cx = bcx + (cx - bcx) * k;
+      cy = bcy + (cy - bcy) * k + drift.dy;
+      scale *= k;
+    }
     return {
-      cx: cx0 + (ax - cx0) * zoom,
-      cy: cy0 + (ay - cy0) * zoom,
-      w: APERTURE.w * s * zoom,
-      h: APERTURE.h * s * zoom,
+      cx,
+      cy,
+      w: APERTURE.w * scale,
+      h: APERTURE.h * scale,
+      /* the plate's rendered scale, for anything drawing the photo itself */
+      s: scale,
     };
   }
 
@@ -133,7 +171,7 @@
 
   function apply(p, now = 0) {
     const onPhone = phone.matches;
-    const fanDepth = onPhone ? 165 : 300;
+    const fanDepth = onPhone ? 100 : 300;
 
     /* Phases. The order is the story: first the whole site dies to black
        around the window (which stays put), then the window comes forward
@@ -152,7 +190,8 @@
        and fans. The fan spreads towards the viewer's left, so the group
        follows it right and down. */
     const zoom = bgZoom(fadeWorld);
-    const a = apertureRect(zoom);
+    const drift = bandDrift(fadeWorld);
+    const a = apertureRect(zoom, drift);
     const seatScale = pane.offsetWidth ? a.w / pane.offsetWidth : 1;
     const seatX = a.cx - stage.clientWidth / 2;
     const seatY = a.cy - stage.clientHeight / 2;
@@ -162,18 +201,24 @@
     /* The pop: the pane peels out of the frame top-first and swells
        towards the viewer before settling into the study angle. */
     const peel = Math.sin(Math.PI * Math.min(1, study * 1.3)) * (1 - study);
-    const pop = 1 + 0.09 * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
+    const pop = 1 + (onPhone ? 0.045 : 0.09) * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
 
     const ry = (onPhone ? -50 : -60) * study;
     const rx = (5 + 6 * study) * study - 9 * peel;
     const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop;
-    const shiftX = seatX * (1 - study) + ((onPhone ? 54 : 70) + fanEase * (onPhone ? 150 : 150)) * study;
+    /* The fan spreads towards the viewer's left, so the group follows it
+       right. The phone numbers are smaller because the phone pane is: with
+       the desktop offsets the finished stack sat a third off the screen. */
+    const shiftX = seatX * (1 - study) + ((onPhone ? 26 : 70) + fanEase * (onPhone ? 40 : 150)) * study;
     const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
 
     bgImg.style.transform = `scale(${zoom.toFixed(4)})`;
+    bgBox.style.transform = drift.k === 1 && !drift.dy
+      ? ''
+      : `translateY(${drift.dy.toFixed(1)}px) scale(${drift.k.toFixed(4)})`;
     veil.style.opacity = fadeWorld.toFixed(3);
 
     /* The rest of the car goes; the glass stays. The hold is the window's
@@ -182,7 +227,7 @@
     const left = a.cx - a.w / 2;
     const top = a.cy - a.h / 2;
     if (windowHold) {
-      const s = Math.max(stage.clientWidth / IMG.w, stage.clientHeight / IMG.h) * zoom;
+      const s = a.s;
       windowHold.style.left = `${left.toFixed(1)}px`;
       windowHold.style.top = `${top.toFixed(1)}px`;
       windowHold.style.width = `${a.w.toFixed(1)}px`;
@@ -192,6 +237,31 @@
       windowHold.style.opacity = (fadeWorld * (1 - release)).toFixed(3);
     }
     if (etch) etch.style.opacity = study.toFixed(3);
+
+    /* The sweep: one hard specular travels the length of the glass as it
+       peels out of the frame, which is what sells it as a solid object
+       rather than a shape that faded in. */
+    if (sheen && sheenGrad) {
+      const sweep = ramp(p, 0.22, 0.46);
+      sheen.style.opacity = (Math.sin(Math.PI * sweep) * 0.95).toFixed(3);
+      sheenGrad.setAttribute('gradientTransform', `translate(${(-0.85 + 1.8 * sweep).toFixed(3)} 0)`);
+    }
+
+    /* The bloom behind it as the frame empties. Sized off the aperture so
+       it blooms from exactly where the glass was. */
+    if (flare) {
+      const burst = Math.sin(Math.PI * release);
+      flare.style.opacity = (burst * 0.9).toFixed(3);
+      if (burst > 0.002) {
+        const grow = 1 + 0.5 * release;
+        const fw = a.w * 1.5 * grow;
+        const fh = a.h * 2.4 * grow;
+        flare.style.left = `${(a.cx - fw / 2).toFixed(1)}px`;
+        flare.style.top = `${(a.cy - fh / 2).toFixed(1)}px`;
+        flare.style.width = `${fw.toFixed(1)}px`;
+        flare.style.height = `${fh.toFixed(1)}px`;
+      }
+    }
     if (aperGlow) {
       /* While the world fades, a soft light behind the seated window makes
          it the last lit thing on the page. It dies as the pane detaches. */
@@ -269,7 +339,9 @@
     copyOpen.style.visibility = openFade > 0.001 ? 'visible' : 'hidden';
     hint.style.opacity = (1 - ramp(p, 0.02, 0.08)).toFixed(3);
     rail.style.opacity = (railIn * (1 - closeIn * 0.4)).toFixed(3);
-    glow.style.opacity = (fan * 0.9).toFixed(3);
+    /* The room comes up as the glass turns and stays up through the fan —
+       without it the separated sheets read as grey cut-outs. */
+    glow.style.opacity = Math.max(study * 0.62, 0.4 + 0.6 * fan).toFixed(3);
 
     const specIn = ramp(p, 0.66, 0.78);
     spec.style.opacity = specIn.toFixed(3);

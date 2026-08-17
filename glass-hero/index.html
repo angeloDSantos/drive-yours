@@ -34,18 +34,18 @@
         <path d="M 0 0.0686 L 0.0071 0.0261 L 0.0172 0.0066 L 0.0989 0.0015 L 0.2408 0 L 0.3775 0.0118 L 0.4944 0.0321 L 0.5684 0.0541 L 0.6621 0.0956 L 0.7309 0.1384 L 0.7868 0.1837 L 0.8401 0.2389 L 0.8934 0.3085 L 0.9553 0.4108 L 0.9763 0.461 L 0.9939 0.5343 L 0.9997 0.5863 L 1 0.6501 L 1 0.9622 L 0.9487 0.9636 L 0.8971 0.9645 L 0.8455 0.9693 L 0.7939 0.9707 L 0.7423 0.9716 L 0.6907 0.973 L 0.6391 0.9764 L 0.5875 0.9764 L 0.5359 0.9773 L 0.4843 0.9801 L 0.4327 0.9825 L 0.3812 0.9835 L 0.3296 0.9858 L 0.278 0.9835 L 0.2264 0.9858 L 0.1748 0.9882 L 0.1232 0.9929 L 0.0716 0.9976 L 0.02 0.9991 L 0 1 Z" />
       </clipPath>
       <linearGradient id="g-glass" x1="0" y1="0" x2="0.7" y2="1">
-        <stop offset="0" stop-color="rgba(196,226,214,0.16)" />
-        <stop offset="0.42" stop-color="rgba(150,190,178,0.05)" />
-        <stop offset="1" stop-color="rgba(128,168,158,0.09)" />
+        <stop offset="0" stop-color="rgba(200,232,218,0.3)" />
+        <stop offset="0.42" stop-color="rgba(152,196,182,0.12)" />
+        <stop offset="1" stop-color="rgba(132,176,164,0.2)" />
       </linearGradient>
       <linearGradient id="g-pvb" x1="0" y1="0" x2="0.4" y2="1">
-        <stop offset="0" stop-color="rgba(238,234,224,0.13)" />
-        <stop offset="1" stop-color="rgba(224,220,208,0.05)" />
+        <stop offset="0" stop-color="rgba(240,236,226,0.24)" />
+        <stop offset="1" stop-color="rgba(226,222,210,0.1)" />
       </linearGradient>
       <linearGradient id="g-adhesive" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="rgba(255,255,255,0.07)" />
-        <stop offset="0.5" stop-color="rgba(214,216,210,0.015)" />
-        <stop offset="1" stop-color="rgba(255,255,255,0.05)" />
+        <stop offset="0" stop-color="rgba(255,255,255,0.13)" />
+        <stop offset="0.5" stop-color="rgba(214,216,210,0.03)" />
+        <stop offset="1" stop-color="rgba(255,255,255,0.1)" />
       </linearGradient>
       <linearGradient id="g-ceramic" x1="0" y1="0" x2="0.9" y2="1">
         <stop offset="0" stop-color="rgba(30,36,52,0.95)" />
@@ -53,16 +53,26 @@
         <stop offset="1" stop-color="rgba(26,20,14,0.94)" />
       </linearGradient>
       <linearGradient id="g-pet" x1="0" y1="0" x2="1" y2="0.6">
-        <stop offset="0" stop-color="rgba(120,210,220,0.10)" />
-        <stop offset="0.3" stop-color="rgba(150,130,220,0.09)" />
-        <stop offset="0.55" stop-color="rgba(220,140,180,0.08)" />
-        <stop offset="0.8" stop-color="rgba(230,190,120,0.09)" />
-        <stop offset="1" stop-color="rgba(120,210,220,0.06)" />
+        <stop offset="0" stop-color="rgba(124,216,226,0.21)" />
+        <stop offset="0.3" stop-color="rgba(154,134,226,0.19)" />
+        <stop offset="0.55" stop-color="rgba(226,144,186,0.17)" />
+        <stop offset="0.8" stop-color="rgba(236,196,124,0.19)" />
+        <stop offset="1" stop-color="rgba(124,216,226,0.13)" />
+      </linearGradient>
+      <!-- The specular sweep that crosses the glass as it lifts out. Swept
+           by translating this gradient, not by moving a second element, so
+           it can never leave the traced silhouette. -->
+      <linearGradient id="g-sheen" x1="0" y1="0.1" x2="0.62" y2="1">
+        <stop offset="0" stop-color="rgba(214, 240, 255, 0)" />
+        <stop offset="0.4" stop-color="rgba(214, 240, 255, 0.16)" />
+        <stop offset="0.5" stop-color="rgba(244, 252, 255, 0.62)" />
+        <stop offset="0.6" stop-color="rgba(214, 240, 255, 0.16)" />
+        <stop offset="1" stop-color="rgba(214, 240, 255, 0)" />
       </linearGradient>
       <linearGradient id="g-hardcoat" x1="0" y1="0" x2="0.6" y2="1">
-        <stop offset="0" stop-color="rgba(255,255,255,0.14)" />
-        <stop offset="0.25" stop-color="rgba(255,255,255,0.02)" />
-        <stop offset="1" stop-color="rgba(255,255,255,0.05)" />
+        <stop offset="0" stop-color="rgba(255,255,255,0.26)" />
+        <stop offset="0.25" stop-color="rgba(255,255,255,0.05)" />
+        <stop offset="1" stop-color="rgba(255,255,255,0.1)" />
       </linearGradient>
     </defs>
   </svg>
@@ -79,6 +89,7 @@
         <div class="stage-veil" aria-hidden="true"></div>
         <div class="window-hold" aria-hidden="true"></div>
         <div class="aperture-glow" aria-hidden="true"></div>
+        <div class="release-flare" aria-hidden="true"></div>
         <div class="stage-glow" aria-hidden="true"></div>
 
         <!-- 2D copy layers (kept out of the 3D scene so type stays razor sharp) -->
@@ -122,6 +133,7 @@
             <svg class="layer l-ceramic" data-layer="4" viewBox="0 0 1163 423" preserveAspectRatio="none"><use href="#win" /></svg>
             <svg class="layer l-pet" data-layer="5" viewBox="0 0 1163 423" preserveAspectRatio="none"><use href="#win" /></svg>
             <svg class="layer l-hardcoat" data-layer="6" viewBox="0 0 1163 423" preserveAspectRatio="none"><use href="#win" /></svg>
+            <svg class="sheen" viewBox="0 0 1163 423" preserveAspectRatio="none"><use href="#win" /></svg>
           </div>
         </div>
 
