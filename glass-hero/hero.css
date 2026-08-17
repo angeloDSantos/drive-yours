@@ -912,19 +912,37 @@ a { color: inherit; text-decoration: none; }
   /* A cover crop of a 2.75:1 window on a 1:2 screen shows about a third of
      the glass, so on a phone the plate is a band across the top instead —
      the whole window reads, and the teardown has room to fan below it. */
-  .stage-bg { inset: 0 0 auto; height: 28svh; }
-  .stage-bg img { object-position: 50% 44%; }
-  /* the plate melts into the page instead of ending on a hard edge */
+  /* The glass is the hero. The band is sized by ratio, not by viewport
+     height, so the traced window runs the full width of any phone, and the
+     crop is centred on the window — which sits at 53% of the plate, not at
+     its middle — instead of on the photograph. It clears the header rather
+     than starting under it. */
   .stage-bg {
-    mask-image: linear-gradient(180deg, #000 78%, transparent);
-    -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent);
+    inset: 11svh 0 auto;
+    height: auto;
+    aspect-ratio: 1385 / 941;
+    mask-image: linear-gradient(180deg, #000 76%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, #000 76%, transparent);
+  }
+  .stage-bg img { object-position: 70% 44%; }
+  /* the cabin's sill light carries on below the plate, so the foot of the
+     hero is a lit floor rather than dead black */
+  .hero-stage::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(130% 42% at 50% 110%, rgba(217, 154, 82, 0.08), transparent 72%);
   }
   .stage-bg::after {
     background:
-      linear-gradient(90deg, rgba(4, 5, 5, 0.42), transparent 30%, transparent 72%, rgba(4, 5, 5, 0.42)),
-      linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 30%, rgba(4, 5, 5, 0.85) 96%);
+      linear-gradient(90deg, rgba(4, 5, 5, 0.3), transparent 22%, transparent 78%, rgba(4, 5, 5, 0.3)),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.3), transparent 26%, rgba(4, 5, 5, 0.8) 96%);
   }
-  .copy { left: 20px; right: 20px; top: 36svh; transform: none; }
+  /* tied to the band's real height (74.5vw from its ratio), not to a
+     viewport fraction, so the copy sits under the glass at every width */
+  .copy { left: 20px; right: 20px; top: calc(11svh + 68vw + 46px); transform: none; }
   .copy h1 { font-size: clamp(40px, 11.5vw, 60px); }
   .subcopy { font-size: 13px; margin-top: 20px; }
   .scene { perspective: 900px; perspective-origin: 50% 34%; }

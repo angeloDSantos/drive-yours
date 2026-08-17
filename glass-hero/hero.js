@@ -42,6 +42,12 @@
      cannot drift apart. */
   const bgZoom = (fadeWorld) => 1.03 + 0.05 * fadeWorld;
 
+  /* Must mirror object-position on .stage-bg img. On a phone the crop is
+     centred on the WINDOW (its centre is at 53.4% of the plate, not 50%)
+     rather than on the photograph, so the glass can run edge to edge. */
+  const objX = () => (phone.matches ? 0.7 : 0.5);
+  const objY = () => (phone.matches ? 0.44 : 0.42);
+
   /* Phone only. The plate is a band at the top so the whole window reads at
      rest, but once the world starts going black there is nothing up there
      to anchor it and the glass is stranded above a dead screen. So the band
@@ -51,7 +57,7 @@
   function bandDrift(fadeWorld) {
     if (!phone.matches || fadeWorld <= 0) return { dy: 0, k: 1 };
     const centre = bgBox.offsetTop + bgBox.clientHeight / 2;
-    return { dy: (stage.clientHeight * 0.44 - centre) * fadeWorld, k: 1 + 0.1 * fadeWorld };
+    return { dy: (stage.clientHeight * 0.44 - centre) * fadeWorld, k: 1 + 0.04 * fadeWorld };
   }
 
   function apertureRect(zoom, drift) {
@@ -65,9 +71,9 @@
     const bx = bgBox.offsetLeft;
     const by = bgBox.offsetTop;
     const s = Math.max(W / IMG.w, H / IMG.h);
-    /* mirrors object-fit: cover at object-position 50% 42% */
-    const ox = bx + (W - IMG.w * s) * 0.5;
-    const oy = by + (H - IMG.h * s) * 0.42;
+    /* mirrors object-fit: cover at the plate's object-position */
+    const ox = bx + (W - IMG.w * s) * objX();
+    const oy = by + (H - IMG.h * s) * objY();
     /* then the plate's own scale, about transform-origin 50% 40% */
     const cx0 = bx + W * 0.5;
     const cy0 = by + H * 0.4;
