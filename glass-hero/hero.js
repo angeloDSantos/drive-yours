@@ -177,7 +177,11 @@
 
   function apply(p, now = 0) {
     const onPhone = phone.matches;
-    const fanDepth = onPhone ? 100 : 300;
+    /* A landscape phone is 844x390: wider than the phone breakpoint but
+       with no vertical room, and the desktop fan runs off its screen. The
+       compact motion numbers key off the stage's real height as well. */
+    const compact = onPhone || stage.clientHeight < 520;
+    const fanDepth = compact ? 100 : 300;
 
     /* Phases. The order is the story: first the whole site dies to black
        around the window (which stays put), then the window comes forward
@@ -207,16 +211,16 @@
     /* The pop: the pane peels out of the frame top-first and swells
        towards the viewer before settling into the study angle. */
     const peel = Math.sin(Math.PI * Math.min(1, study * 1.3)) * (1 - study);
-    const pop = 1 + (onPhone ? 0.045 : 0.09) * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
+    const pop = 1 + (compact ? 0.045 : 0.09) * Math.sin(Math.PI * Math.min(1, study * 1.15)) * (1 - fanEase);
 
-    const ry = (onPhone ? -50 : -60) * study;
+    const ry = (compact ? -50 : -60) * study;
     const rx = (5 + 6 * study) * study - 9 * peel;
     const scale = (seatScale + (1 - 0.12 * study - seatScale) * study) * pop;
     /* The fan spreads towards the viewer's left, so the group follows it
        right. The phone numbers are smaller because the phone pane is: with
        the desktop offsets the finished stack sat a third off the screen. */
-    const shiftX = seatX * (1 - study) + ((onPhone ? 26 : 70) + fanEase * (onPhone ? 40 : 150)) * study;
-    const shiftY = seatY * (1 - study) + fanEase * (onPhone ? 36 : 22) * study;
+    const shiftX = seatX * (1 - study) + ((compact ? 26 : 70) + fanEase * (compact ? 40 : 150)) * study;
+    const shiftY = seatY * (1 - study) + fanEase * (compact ? 36 : 22) * study;
     pane.style.transform =
       `translateX(${shiftX.toFixed(2)}px) translateY(${shiftY.toFixed(2)}px) ` +
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale.toFixed(4)})`;

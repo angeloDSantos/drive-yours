@@ -5,11 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Drive Yours — The glass, taken apart</title>
   <meta name="description" content="Bespoke privacy glass for executive cabins. One pane, seven layers, taken apart." />
+  <meta name="theme-color" content="#070808" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Drive Yours — The glass, taken apart" />
+  <meta property="og:description" content="Bespoke privacy glass for executive cabins. One pane, seven layers, taken apart." />
+  <meta property="og:url" content="https://angelodsantos.github.io/drive-yours/glass-hero/" />
+  <meta property="og:image" content="https://angelodsantos.github.io/drive-yours/glass-hero/assets/ext-5.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="assets/favicon.png" type="image/png" sizes="128x128" />
   <!-- Pages serves every file with max-age=600, so fresh markup can otherwise
        pair with a ten-minute-old stylesheet and the page loads in a half-
        updated state. Bump v on any change to hero.css or hero.js. -->
-  <link rel="stylesheet" href="hero.css?v=9" />
+  <link rel="stylesheet" href="hero.css?v=10" />
 </head>
 <body>
 
@@ -87,7 +94,7 @@
       <div class="hero-stage">
 
         <div class="stage-bg" aria-hidden="true">
-          <img src="assets/saloon-cabin-night.webp" alt="" width="1672" height="941" />
+          <img src="assets/saloon-cabin-night.webp" alt="" width="1672" height="941" fetchpriority="high" />
         </div>
         <canvas class="bokeh-live" aria-hidden="true"></canvas>
         <div class="stage-veil" aria-hidden="true"></div>
@@ -314,6 +321,6 @@
     </p>
   </footer>
 
-  <script src="hero.js?v=9"></script>
+  <script src="hero.js?v=10"></script>
 </body>
 </html>
