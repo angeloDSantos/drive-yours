@@ -17,6 +17,11 @@
      so the page reads as one lit interior, not five black boxes. */
   --amber: #d99a52;
   --city: #6d9ed6;
+  /* One scale for the small technical type. Six ad-hoc sizes between 8 and
+     11px was the thing that read as unconsidered up close. */
+  --t-micro: 8px;
+  --t-label: 9.5px;
+  --t-tag: 11px;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
 }
@@ -78,30 +83,57 @@ a { color: inherit; text-decoration: none; }
     transparent
   );
 }
+/* No emblem in the header. The window silhouette is 2.75:1, and at the
+   16px a header allows it reads as a smudge rather than a window — it earns
+   its place in the footer, at a size where the shape is legible. Up here the
+   identity is the wordmark and its codes, set the way the bug is etched into
+   the corner of every piece of automotive glass: this trade's own
+   typography, and nobody else's site header. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
+  gap: 13px;
 }
-.brand-emblem {
-  width: 30px;
-  height: 30px;
+.brand-glyph {
+  width: 44px;
+  height: auto;
+  overflow: visible;
+  fill: none;
+  stroke: rgba(231, 231, 227, 0.7);
+  stroke-width: 1.2;
+  transition: stroke 0.35s ease;
+}
+.brand-glyph use { vector-effect: non-scaling-stroke; }
+.brand:hover .brand-glyph,
+.brand:focus-visible .brand-glyph { stroke: var(--glass); }
+/* The wordmark speaks with the same voice as the headline — light, tightly
+   tracked, sentence case — rather than the wide-tracked caps every other
+   header wears. */
+.brand-word {
+  font-weight: 300;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+.brand-bug {
   display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  font-size: 7px;
-  transform: rotate(45deg);
+  gap: 2px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--faint);
+  font: 400 var(--t-micro) / 1.3 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
-.brand-emblem { letter-spacing: 0.08em; }
+.brand-bug b { font-weight: 400; }
+.brand:focus-visible { outline: 2px solid var(--paper); outline-offset: 6px; }
+
 .site-nav {
   display: flex;
   align-items: center;
   gap: clamp(18px, 3vw, 34px);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.22em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 .site-nav a {
@@ -238,8 +270,8 @@ a { color: inherit; text-decoration: none; }
 .eyebrow {
   margin: 0 0 22px;
   color: #888d8b;
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.32em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .copy h1 {
@@ -295,8 +327,8 @@ a { color: inherit; text-decoration: none; }
 .rail-side {
   margin: 0;
   color: var(--faint);
-  font: 500 8px/1 var(--mono);
-  letter-spacing: 0.26em;
+  font: 500 var(--t-micro)/1 var(--mono);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 .rail-list {
@@ -319,7 +351,7 @@ a { color: inherit; text-decoration: none; }
 .rail-name { font-size: 12.5px; letter-spacing: 0.01em; }
 .rail-detail {
   color: var(--muted);
-  font: 400 10px/1 var(--mono);
+  font: 400 var(--t-label)/1 var(--mono);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -401,8 +433,8 @@ a { color: inherit; text-decoration: none; }
   gap: 14px;
   margin: 0;
   color: var(--muted);
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.24em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.18em;
   opacity: 0;
   white-space: nowrap;
 }
@@ -419,8 +451,8 @@ a { color: inherit; text-decoration: none; }
   gap: 10px;
   margin: 0;
   color: var(--faint);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.3em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .scroll-hint span { font-size: 12px; }
@@ -474,8 +506,8 @@ a { color: inherit; text-decoration: none; }
 .band .eyebrow {
   margin: 0 0 22px;
   color: var(--faint);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.34em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .band h2 {
@@ -575,7 +607,7 @@ a { color: inherit; text-decoration: none; }
 .stat-row p {
   margin: 12px 0 0;
   color: var(--faint);
-  font: 500 9px/1.5 var(--mono);
+  font: 500 var(--t-label)/1.5 var(--mono);
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
@@ -612,8 +644,8 @@ a { color: inherit; text-decoration: none; }
 .spec-line {
   margin: 0 0 8px;
   color: var(--glass);
-  font: 500 11px/1.5 var(--mono);
-  letter-spacing: 0.24em;
+  font: 500 var(--t-tag)/1.5 var(--mono);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 .shade-actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -678,8 +710,8 @@ a { color: inherit; text-decoration: none; }
   left: 20px;
   top: 16px;
   color: rgba(231, 231, 227, 0.55);
-  font: 500 8px/1 var(--mono);
-  letter-spacing: 0.28em;
+  font: 500 var(--t-micro)/1 var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .shade-label {
@@ -687,8 +719,8 @@ a { color: inherit; text-decoration: none; }
   left: 20px;
   bottom: 16px;
   color: rgba(231, 231, 227, 0.85);
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.28em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.2em;
 }
 /* Styling variants: the veil's gradient carries the shape of the tint,
    its opacity carries the depth. */
@@ -720,8 +752,8 @@ a { color: inherit; text-decoration: none; }
 .shade-group-label {
   margin: 0 0 10px;
   color: var(--faint);
-  font: 500 8px/1 var(--mono);
-  letter-spacing: 0.3em;
+  font: 500 var(--t-micro)/1 var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .shade-row {
@@ -736,8 +768,8 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
   border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 10px 14px;
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.24em;
+  font: 500 var(--t-label)/1 var(--mono);
+  letter-spacing: 0.18em;
   transition: color 0.25s, border-color 0.25s, background 0.25s;
 }
 .shade-btn:hover { color: var(--paper); border-color: rgba(255, 255, 255, 0.34); }
@@ -780,7 +812,7 @@ a { color: inherit; text-decoration: none; }
 .steps li:nth-child(2) { --accent-step: rgba(150, 186, 224, 0.6); }
 .steps li:nth-child(3) { --accent-step: rgba(217, 154, 82, 0.6); }
 .steps li:hover { transform: translateY(-3px); }
-.step-num { color: var(--accent-step, var(--glass)); font: 500 10px/1 var(--mono); letter-spacing: 0.3em; }
+.step-num { color: var(--accent-step, var(--glass)); font: 500 var(--t-label)/1 var(--mono); letter-spacing: 0.2em; }
 .steps h3 {
   margin: 14px 0 10px;
   font-weight: 300;
@@ -814,6 +846,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Footer ------------------------------------------------------------------- */
+/* Read as the plate at the end of a spec sheet: the mark and its codes, the
+   index, the address. Sentence case throughout — a row of wide-tracked caps
+   links is the thing that made this corner look like every other page. */
 .site-foot {
   position: relative;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -822,30 +857,73 @@ a { color: inherit; text-decoration: none; }
 .foot-inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 44px clamp(20px, 4.5vw, 64px) 50px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 22px;
-  flex-wrap: wrap;
+  padding: 56px clamp(20px, 4.5vw, 64px) 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: clamp(28px, 4vw, 60px);
+  align-items: start;
 }
-.foot-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 26px;
-  overflow-wrap: anywhere;
-  color: #9a9e9b;
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.22em;
+.brand-stacked {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.brand-stacked .brand-glyph { width: 104px; }
+.brand-stacked .brand-word { font-size: 22px; }
+.foot-bug {
+  margin: 12px 0 0;
+  color: var(--faint);
+  font: 400 var(--t-micro)/1.4 var(--mono);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.foot-nav a:hover { color: var(--paper); }
-.foot-line {
-  width: 100%;
-  margin: 8px 0 0;
+.foot-nav {
+  display: grid;
+  gap: 9px;
+  justify-items: start;
+  font-size: 13.5px;
+  color: #9a9e9b;
+}
+.foot-nav a {
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  transition: color 0.25s, border-color 0.25s;
+}
+.foot-nav a:hover { color: var(--paper); border-color: rgba(159, 212, 192, 0.5); }
+.foot-address {
+  display: grid;
+  gap: 12px;
+  font-style: normal;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.foot-address a {
+  justify-self: start;
+  color: var(--paper);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  padding-bottom: 2px;
+  overflow-wrap: anywhere;
+  transition: border-color 0.25s;
+}
+.foot-address a:hover { border-color: var(--glass); }
+.foot-legal a {
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  transition: color 0.25s, border-color 0.25s;
+}
+.foot-legal a:hover { color: var(--paper); border-color: rgba(159, 212, 192, 0.5); }
+.foot-legal {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4.5vw, 64px) 44px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
   color: var(--faint);
-  font: 500 8px/1.6 var(--mono);
-  letter-spacing: 0.22em;
+  font: 400 var(--t-micro)/1.6 var(--mono);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .site-foot a:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
@@ -899,6 +977,12 @@ a { color: inherit; text-decoration: none; }
   .close-line { font-size: clamp(40px, 11vw, 56px); }
   .site-nav { gap: 16px; }
   .site-nav a:not(.nav-cta) { display: none; }
+  /* the bug is a nicety at desk width and clutter on a phone */
+  .brand-bug { display: none; }
+  .brand-glyph { width: 38px; }
+  .brand-word { font-size: 17px; }
+  .foot-inner { grid-template-columns: 1fr; gap: 34px; }
+  .foot-legal { padding-bottom: 38px; }
   .story-grid { grid-template-columns: 1fr; }
   .stat-row { grid-template-columns: 1fr 1fr; }
   .stat-row li:last-child { grid-column: span 2; }
