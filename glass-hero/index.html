@@ -6,7 +6,10 @@
   <title>Drive Yours — The glass, taken apart</title>
   <meta name="description" content="Bespoke privacy glass for executive cabins. One pane, seven layers, taken apart." />
   <link rel="icon" href="assets/favicon.png" type="image/png" sizes="128x128" />
-  <link rel="stylesheet" href="hero.css" />
+  <!-- Pages serves every file with max-age=600, so fresh markup can otherwise
+       pair with a ten-minute-old stylesheet and the page loads in a half-
+       updated state. Bump v on any change to hero.css or hero.js. -->
+  <link rel="stylesheet" href="hero.css?v=9" />
 </head>
 <body>
 
@@ -311,6 +314,6 @@
     </p>
   </footer>
 
-  <script src="hero.js"></script>
+  <script src="hero.js?v=9"></script>
 </body>
 </html>

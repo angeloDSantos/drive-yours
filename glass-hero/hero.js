@@ -405,6 +405,13 @@
   if (reduced.matches) {
     still();
   } else {
+    /* Paint the correct frame before the browser paints at all. Deferring
+       the first apply() to a rAF costs one frame of wrong geometry, and
+       snapping current to target means a reload part-way down the track
+       does not scrub the whole teardown to catch up. */
+    measure();
+    current = target;
+    apply(current, performance.now());
     raf = requestAnimationFrame(frame);
   }
   reduced.addEventListener('change', () => {

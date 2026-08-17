@@ -365,6 +365,13 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   overflow: visible;
   backface-visibility: visible;
+  /* The engine owns every sheet's opacity, but it cannot own the first
+     frame. Without this the browser paints all seven at full strength,
+     stacked and unpositioned, before the first script frame moves them —
+     which is the flash on load. The resting state is written here so the
+     very first paint is already correct, and so the page degrades to the
+     photograph if the script never runs. */
+  opacity: 0;
 }
 .layer use { stroke-width: 2; vector-effect: non-scaling-stroke; }
 
