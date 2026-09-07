@@ -23,6 +23,17 @@ An **unbadged executive saloon**, long wheelbase, black. Purchased high-poly mod
 
 Decision needed: **generic saloon** (safe, recommended) vs a **specific licensed model** (a real client car, but a legal exposure on a commercial site).
 
+## The place
+
+London, on the Thames, at night. Every shot looks across the river at a skyline a Londoner recognises in one glance. The first storyboards used a generic harbour skyline; that is replaced. Candidate vantages, one to be chosen from the London plate sheet:
+
+- **Bankside:** St Paul's dome and the City cluster (Gherkin, Cheesegrater, Walkie-Talkie, 22 Bishopsgate), Millennium Bridge.
+- **Shad Thames:** Tower Bridge lit white and blue, City cluster and the Shard behind.
+- **South Bank:** Palace of Westminster and Big Ben lit gold, Westminster Bridge.
+- **Rotherhithe:** Canary Wharf, One Canada Square and the glass towers.
+
+The same vantage is used for the Blender backdrop (a night HDRI shot on the Thames, or a matte-painted plate on a card behind the river) so the reflection in the glass and the view through it agree.
+
 ## Shot list
 
 All shots 24 fps, rendered 2560 × 1440 landscape plus a 1080 × 1920 portrait camera for phones.
@@ -101,6 +112,7 @@ Ten clips, each with a one-line note on what specifically sells the material.
 ## Open decisions
 
 - [ ] Generic saloon vs licensed model
+- [ ] London vantage (Bankside, Shad Thames, South Bank, Rotherhithe)
 - [ ] Display typeface: licensed (Söhne, Neue Haas Grotesk, ABC Diatype) vs Google Fonts (Archivo, Familjen Grotesk)
 - [ ] Domain name and host (Cloudflare Pages recommended)
 - [ ] Real contact email to replace `studio@driveyours.example`
