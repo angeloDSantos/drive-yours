@@ -163,7 +163,9 @@ def ply_mesh(name, thickness, outline, grid=0.02):
     me.validate()
     ob = bpy.data.objects.new(name, me)
     bev = ob.modifiers.new("Bevel", "BEVEL")
-    bev.width = min(0.0002, thickness * 0.25); bev.segments = 2
+    # Real edge is 0.2 mm; the teardown camera needs more than that to read
+    # seven silhouettes, so the bevel is the "teardown scale" on the edge.
+    bev.width = min(0.00055, max(thickness * 0.3, 0.00025)); bev.segments = 3
     bev.limit_method = "ANGLE"; bev.angle_limit = math.radians(40); bev.use_clamp_overlap = True
     return ob
 
@@ -214,6 +216,9 @@ def box(name, size, loc, bevel=0.0):
 def plane(name, sx, sy, loc, rot=(0, 0, 0)):
     me = bpy.data.meshes.new(name)
     me.from_pydata([(-sx/2,-sy/2,0),(sx/2,-sy/2,0),(sx/2,sy/2,0),(-sx/2,sy/2,0)], [], [(0,1,2,3)])
+    uv = me.uv_layers.new()
+    for loop, uvco in zip(uv.data, ((0, 0), (1, 0), (1, 1), (0, 1))):
+        loop.uv = uvco
     ob = bpy.data.objects.new(name, me); ob.location = loc; ob.rotation_euler = rot
     return ob
 
@@ -244,8 +249,12 @@ def shadow_transparent(nt, surface_socket, out):
     nt.links.new(tr.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
 
-def dispersive_glass(nt, ior=1.52, spread=0.012, rough=0.02):
-    """Three glass lobes at IOR-spread, IOR, IOR+spread carrying R, G, B."""
+def dispersive_glass(nt, ior=1.52, spread=0.004, rough=0.02):
+    """Three glass lobes at IOR-spread, IOR, IOR+spread carrying R, G, B.
+
+    Spread is kept small: two air-gapped glass plies at 0.012 turned the fan
+    into a rainbow fog. Edges still break into spectrum; the faces stay clear.
+    """
     add1 = nt.nodes.new("ShaderNodeAddShader"); add1.location = (-200, 0)
     add2 = nt.nodes.new("ShaderNodeAddShader"); add2.location = (0, 0)
     for k, (col, di) in enumerate((((1,0,0,1), -spread), ((0,1,0,1), 0.0), ((0,0,1,1), spread))):
@@ -396,7 +405,7 @@ def mat_plate(name, path, strength):
     img = bpy.data.images.load(path)
     tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = img; tex.location = (-300, 0)
     tc = nt.nodes.new("ShaderNodeTexCoord"); tc.location = (-600, 0)
-    nt.links.new(tc.outputs["Generated"], tex.inputs["Vector"])   # the card has no UVs
+    nt.links.new(tc.outputs["UV"], tex.inputs["Vector"])
     em = nt.nodes.new("ShaderNodeEmission"); em.location = (100, 0)
     em.inputs["Strength"].default_value = strength
     nt.links.new(tex.outputs["Color"], em.inputs["Color"])
@@ -431,14 +440,15 @@ def build():
     rig = bpy.data.objects.new("RIG", None); rig.empty_display_type = "PLAIN_AXES"
     rig.location = CENTRE; link(rig, C["Rig"])
     rig["teardown"] = 0.0; rig["vlt"] = 0.05; rig["clear_t"] = 0.9173
-    rig["fan_gap"] = 0.06; rig["fan_twist"] = 4.0; rig["lift"] = 0.16; rig["turn"] = 55.0
-    rig["rim_t"] = 0.5; rig["window"] = 1.0
+    rig["fan_gap"] = 0.14; rig["fan_twist"] = 2.5; rig["lift"] = 0.30; rig["turn"] = 48.0
+    rig["rim_t"] = 0.18; rig["window"] = 1.0; rig["fan_spread"] = 0.012
     for k, (lo, hi, desc) in {
         "teardown": (0, 1, "0 pane in the door, 1 fully exploded"),
         "vlt": (0.01, 1, "visible light transmission of the whole stack"),
         "clear_t": (0.5, 1, "measured transmission of the untinted stack, set by calibrate.py"),
         "fan_gap": (0, 0.2, "metres between plies at teardown 1"),
         "fan_twist": (0, 15, "degrees of twist per ply at teardown 1"),
+        "fan_spread": (0, 0.1, "metres of lateral cascade per ply at teardown 1"),
         "lift": (0, 1, "metres the pane comes into the cabin"),
         "turn": (0, 90, "degrees the pane turns toward three-quarter"),
         "rim_t": (0, 1, "position of the passing headlight along its path"),
@@ -481,10 +491,14 @@ def build():
         ob.parent = stack
         ob["ply_index"] = i; ob["thickness_real_m"] = t; ob["thickness_render_m"] = tr
         # fan: from the middle ply outward, along the normal, with a little twist
-        drive(ob, "location", 1, f"{yc:.6f} + ({i} - 3) * (0.0006 + fan_gap * min(max((teardown - 0.3) / 0.7, 0), 1))", rig, ("teardown", "fan_gap"))
+        # and a lateral cascade so the stack reads as seven silhouettes instead of
+        # a single ghost when the camera is still roughly on the glass normal.
+        amt = "min(max((teardown - 0.3) / 0.7, 0), 1)"
+        drive(ob, "location", 1, f"{yc:.6f} + ({i} - 3) * (0.0006 + fan_gap * {amt})", rig, ("teardown", "fan_gap"))
+        drive(ob, "location", 0, f"({i} - 3) * fan_spread * {amt}", rig, ("teardown", "fan_spread"))
         drive(ob, "hide_render", None, "teardown <= 0.3", rig, ("teardown",))
         drive(ob, "hide_viewport", None, "teardown <= 0.3", rig, ("teardown",))
-        drive(ob, "rotation_euler", 2, f"radians(fan_twist) * ({i} - 3) * min(max((teardown - 0.3) / 0.7, 0), 1)", rig, ("teardown", "fan_twist"))
+        drive(ob, "rotation_euler", 2, f"radians(fan_twist) * ({i} - 3) * {amt}", rig, ("teardown", "fan_twist"))
         link(ob, C["Glass"])
 
     # -- the door and cabin (stand-in until the car model arrives) -------------
@@ -493,7 +507,7 @@ def build():
     chrome = mat_simple("Chrome", (0.9, 0.9, 0.9, 1), 0.12, metallic=1.0)
     paint = mat_simple("Black paint", (0.004, 0.004, 0.005, 1), 0.08, coat=1.0)
     headliner = mat_simple("Headliner", (0.03, 0.03, 0.03, 1), 0.8)
-    amber = mat_simple("Amber strip", (1, 0.5, 0.15, 1), 0.5, emission=(1.0, 0.42, 0.10, 1), strength=25.0)
+    amber = mat_simple("Amber strip", (1, 0.5, 0.15, 1), 0.5, emission=(1.0, 0.42, 0.10, 1), strength=9.0)
 
     # window surround as a strip from the outline to an expanded rectangle,
     # so the aperture is exactly the glass silhouette. Local to STACK centre.
@@ -515,7 +529,7 @@ def build():
         ob = bpy.data.objects.new(nm, cu); ob.data.materials.append(mat); link(ob, C["Set"])
 
     x0, x1, z0, z1 = rect[0] + CENTRE.x, rect[1] + CENTRE.x, rect[2] + CENTRE.z, rect[3] + CENTRE.z
-    CAR_X0, CAR_X1, FLOOR, ROOF, SILL = -0.6, 1.9, 0.40, 1.50, 0.28
+    CAR_X0, CAR_X1, FLOOR, ROOF, SILL = -0.6, 1.9, 0.40, 1.85, 0.28
     def wall_pieces(prefix, yy, mat_lower, mat_upper, lower_z):
         """Flat pieces around the window rectangle so the wall has the hole."""
         pieces = [
@@ -528,7 +542,7 @@ def build():
             me = bpy.data.meshes.new(nm)
             me.from_pydata([(a, yy, c), (b, yy, c), (b, yy, d), (a, yy, d)], [], [(0, 1, 2, 3)])
             ob = bpy.data.objects.new(nm, me); ob.data.materials.append(mat); link(ob, C["Set"])
-    wall_pieces("Door card", -0.03, leather_q, headliner, FLOOR)
+    wall_pieces("Door card", -0.03, leather_q, leather, FLOOR)
     wall_pieces("Door skin", 0.012, paint, paint, SILL)
     # interior door card: a real slab with the quilting, proud of the wall
     card = box("Door card slab", (WIN_W + 0.3, 0.05, 0.42), (CENTRE.x, -0.075, BELT_Z - 0.26), bevel=0.02)
@@ -540,7 +554,7 @@ def build():
     handle.data.materials.append(chrome); link(handle, C["Set"])
     # cabin shell
     for nm, sx, sy, loc, rot, mat in (
-        ("Headliner", CAR_X1 - CAR_X0, 1.6, ((CAR_X0 + CAR_X1) / 2, -0.85, ROOF), (0, 0, 0), headliner),
+        ("Headliner", CAR_X1 - CAR_X0, 1.72, ((CAR_X0 + CAR_X1) / 2, -0.82, ROOF), (0, 0, 0), headliner),
         ("Floor", CAR_X1 - CAR_X0, 1.6, ((CAR_X0 + CAR_X1) / 2, -0.85, FLOOR), (0, 0, 0), headliner),
         ("Far door", CAR_X1 - CAR_X0, ROOF - FLOOR, ((CAR_X0 + CAR_X1) / 2, -1.65, (FLOOR + ROOF) / 2), (math.radians(90), 0, 0), leather),
         ("Rear bulkhead", 1.6, ROOF - FLOOR, (CAR_X1, -0.85, (FLOOR + ROOF) / 2), (math.radians(90), 0, math.radians(90)), leather),
@@ -556,8 +570,11 @@ def build():
     parapet = box("River parapet", (60, 0.5, 0.95), (0.5, 12.0, 0.475)); parapet.data.materials.append(mat_simple("Granite", (0.12, 0.12, 0.11, 1), 0.6)); link(parapet, C["Outside"])
     plate_path = os.path.join(ROOT, "render", "env", "tower_bridge_plate.webp")
     if os.path.exists(plate_path):
-        card = plane("Tower Bridge plate", 80, 45, (0.5, 45.0, 1.1), (math.radians(90), 0, 0))
-        card.data.materials.append(mat_plate("Tower Bridge plate", plate_path, 2.2)); link(card, C["Outside"])
+        # Size the card to the shot-2 frustum so the whole plate (bridge, water,
+        # city) sits in the window the way board-20 composed it, instead of a
+        # centre crop of an 80 m billboard.
+        card = plane("Tower Bridge plate", 44, 24, (0.50, 42.0, 1.05), (math.radians(90), 0, 0))
+        card.data.materials.append(mat_plate("Tower Bridge plate", plate_path, 3.4)); link(card, C["Outside"])
 
     # world: night river HDRI for reflections
     w = bpy.data.worlds.new("Night"); sc.world = w; w.use_nodes = True
@@ -571,6 +588,17 @@ def build():
         wn.links.new(tc.outputs["Generated"], mp.inputs["Vector"]); wn.links.new(mp.outputs[0], env.inputs["Vector"])
         wn.links.new(env.outputs[0], bg.inputs["Color"])
         bg.inputs["Strength"].default_value = 0.12
+        # HDRI is for reflections on paint and glass. Camera rays see a dark
+        # night, otherwise shot 3 looks over the door skin into Shanghai trees.
+        lp = wn.nodes.new("ShaderNodeLightPath"); lp.location = (200, 200)
+        dark = wn.nodes.new("ShaderNodeBackground"); dark.location = (200, -150)
+        dark.inputs["Color"].default_value = (0.0015, 0.0018, 0.004, 1)
+        mix = wn.nodes.new("ShaderNodeMixShader"); mix.location = (450, 0)
+        wo = wn.nodes["World Output"]
+        wn.links.new(lp.outputs["Is Camera Ray"], mix.inputs[0])
+        wn.links.new(bg.outputs[0], mix.inputs[1])
+        wn.links.new(dark.outputs[0], mix.inputs[2])
+        wn.links.new(mix.outputs[0], wo.inputs["Surface"])
     else:
         bg.inputs["Color"].default_value = (0.01, 0.012, 0.02, 1)
 
@@ -584,11 +612,14 @@ def build():
         if aim is not None:
             d = Vector(aim) - Vector(loc); ob.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
         return ob
-    light("Key streetlamp", "AREA", (-1.6, 3.8, 3.6), 70, (1.0, 0.86, 0.68), size=0.8, aim=(0.5, 0, 1.1))
-    light("Fill city", "AREA", (4.0, 9.0, 7.0), 120, (0.55, 0.72, 1.0), size=5.0, aim=(0.5, 0, 1.1))
-    light("Cabin top", "AREA", (0.6, -0.7, ROOF - 0.02), 20, (1.0, 0.92, 0.8), size=0.5, aim=(0.5, -0.4, 0.8))
-    rim = light("Rim headlight", "AREA", (-6, 6.0, 0.75), 900, (1.0, 0.95, 0.85), size=0.35, aim=(0.5, 0, 1.1))
-    drive(rim, "location", 0, "-7 + 14 * rim_t", rig, ("rim_t",))
+    light("Key streetlamp", "AREA", (-2.4, 5.0, 4.4), 36, (1.0, 0.86, 0.68), size=1.8, aim=(0.5, 0, 1.1))
+    light("Fill city", "AREA", (5.0, 14.0, 9.0), 55, (0.55, 0.72, 1.0), size=10.0, aim=(0.5, 0, 1.1))
+    light("Cabin top", "AREA", (0.6, -0.7, ROOF - 0.02), 6, (1.0, 0.92, 0.8), size=0.9, aim=(0.5, -0.4, 0.8))
+    # Grazing by default. Energy 900 at rim_t=0.5 sat in the middle of the pane
+    # and burned shot 3 to white; the sweep is for the sequence, not the still.
+    rim = light("Rim headlight", "AREA", (-6, 8.0, 0.90), 140, (1.0, 0.95, 0.85), size=1.1, aim=(0.5, 0, 1.1))
+    drive(rim, "location", 0, "-8 + 16 * rim_t", rig, ("rim_t",))
+    drive(rim, "location", 1, "8.0 - 1.5 * rim_t", rig, ("rim_t",))
 
     # -- cameras --------------------------------------------------------------------
     def camera(nm, loc, aim, lens, fstop, focus):
@@ -597,11 +628,12 @@ def build():
         ob = bpy.data.objects.new(nm, cd); ob.location = loc
         d = Vector(aim) - Vector(loc); ob.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
         link(ob, C["Cameras"]); return ob
-    # interior: from the seat, looking at the door. The plate's framing needs a
-    # wider lens than the 50 mm in the direction doc; noted for QA.
-    s2 = camera("CAM_S2", (0.60, -1.38, 1.10), (0.50, 0.0, 1.05), 28, 2.8, 1.38)
+    # interior: from the rear seat, looking at the door. 40 mm (direction says
+    # 50). Pulled back far enough that a 70° fan does not sit on the lens;
+    # the full window silhouette stays in frame the way board-20 composed it.
+    s2 = camera("CAM_S2", (0.88, -1.28, 1.16), (0.48, 0.0, 1.12), 40, 2.8, 1.32)
     s2.data.dof.focus_object = stack
-    s3 = camera("CAM_S3", (1.9, 3.3, 1.55), (0.5, 0.0, 1.10), 85, 2.8, 3.8)
+    s3 = camera("CAM_S3", (1.35, 3.9, 1.28), (0.50, 0.02, 1.14), 85, 2.8, 3.9)
     sc.camera = s2
 
     # -- render ----------------------------------------------------------------------
@@ -634,7 +666,7 @@ def build():
         rl = nt.nodes.new("CompositorNodeRLayers"); rl.location = (-600, 0)
         glare = nt.nodes.new("CompositorNodeGlare"); glare.location = (-300, 0)
         glare.inputs["Type"].default_value = "Bloom"
-        for k, v in (("Threshold", 1.2), ("Strength", 0.12), ("Size", 0.6), ("Quality", "High")):
+        for k, v in (("Threshold", 2.4), ("Strength", 0.08), ("Size", 0.55), ("Quality", "High")):
             if k in glare.inputs: glare.inputs[k].default_value = v
         if hasattr(sc, "compositing_node_group"):
             nt.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")

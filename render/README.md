@@ -12,8 +12,8 @@ R=/home/datguy/drive-yours/render
 $B -b --python $R/build_scene.py -- --out $R/scene.blend
 
 # render one still with rig overrides
-$B -b $R/scene.blend --python $R/shot.py -- --cam CAM_S2 --set teardown=1 vlt=0.05 rim_t=0.4 \
-   --res 50 --samples 128 --out $R/out/s2_fan.png
+$B -b $R/scene.blend --python $R/shot.py -- --cam CAM_S2 --set teardown=1 vlt=0.05 rim_t=0.18 \
+   --res 50 --samples 128 --mb 0 --dof 0 --out $R/out/s2_fan.png
 
 # calibrate the tint (writes lookdev/calibration.md, stores clear_t)
 $B -b $R/scene.blend --python $R/calibrate.py
@@ -36,8 +36,8 @@ Everything animates from custom properties on the `RIG` empty:
 | `teardown` | 0 pane in the door. 0 to 0.35 the pane lifts into the cabin and turns three-quarter. 0.3 to 1 the seven plies fan along their normals. |
 | `vlt` | Visible light transmission of the whole laminate. Drives the absorption density in the ceramic layer. |
 | `clear_t` | Transmission of the untinted laminate, measured by `calibrate.py`. |
-| `fan_gap`, `fan_twist`, `lift`, `turn` | Teardown shape. |
-| `rim_t` | Position of the passing headlight along its path. |
+| `fan_gap`, `fan_twist`, `fan_spread`, `lift`, `turn` | Teardown shape. |
+| `rim_t` | Position of the passing headlight along its path. Grazing by default. |
 | `window` | Shot 3 glass position, not yet wired. |
 
 Up to `teardown` 0.3 one solid `PANE assembled` renders; above it the seven
@@ -47,8 +47,9 @@ more honest for the assembled state.
 
 ## Cameras
 
-- `CAM_S2` interior, from the rear seat. 32 mm f/2.8, focus follows the pane.
-  The direction doc says 50 mm; the storyboard framing needs wider. Open for QA.
+- `CAM_S2` interior, from the rear seat. 40 mm f/2.8, focus follows the pane.
+  Direction says 50 mm; 40 mm fills the window and the quilted card the way
+  board-20 does. Open for QA.
 - `CAM_S3` exterior, 85 mm f/2.8, slight high angle on the rear door.
 
 ## What is a stand-in

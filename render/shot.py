@@ -5,6 +5,8 @@
         --out render/out/s2_fan.png
 
 --set takes any RIG custom property. --frame renders that frame of the timeline.
+--mb 0/1 and --dof 0/1 override motion blur and depth of field (lookdev stills
+use both off so the geometry can be read; the sequence turns them back on).
 """
 import bpy, sys, os, time
 
@@ -25,6 +27,8 @@ if arg("--exposure"): sc.view_settings.exposure = float(arg("--exposure"))
 if arg("--frame"): sc.frame_set(int(arg("--frame")))
 if arg("--lens"): sc.camera.data.lens = float(arg("--lens"))
 if arg("--fstop"): sc.camera.data.dof.aperture_fstop = float(arg("--fstop"))
+if arg("--mb") is not None: sc.render.use_motion_blur = bool(int(arg("--mb")))
+if arg("--dof") is not None: sc.camera.data.dof.use_dof = bool(int(arg("--dof")))
 out = arg("--out", "render/out/frame.png")
 if not os.path.isabs(out): out = os.path.join(os.path.dirname(bpy.data.filepath), "..", out)
 sc.render.filepath = os.path.abspath(out)
