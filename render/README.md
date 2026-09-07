@@ -38,18 +38,21 @@ Everything animates from custom properties on the `RIG` empty:
 | `clear_t` | Transmission of the untinted laminate, measured by `calibrate.py`. |
 | `fan_gap`, `fan_twist`, `fan_spread`, `lift`, `turn` | Teardown shape. |
 | `rim_t` | Position of the passing headlight along its path. Grazing by default. |
-| `window` | Shot 3 glass position, not yet wired. |
+| `window` | Shot 3: 0 glass down in the door pocket, 1 closed. |
 
 Up to `teardown` 0.3 one solid `PANE assembled` renders; above it the seven
 `P0..P6` plies take over. Seven coincident solids confuse the volume stack and
 bonded layers have no air interfaces, so the single solid is both faster and
-more honest for the assembled state.
+more honest for the assembled state. Fanned plies carry a second material on the side faces, plus a 1.25 mm rim
+curve on the window silhouette, so the seven arches draw. Two area kickers
+are light-linked to the Fan collection only, so they never appear in the
+assembled pane.
 
 ## Cameras
 
-- `CAM_S2` interior, from the rear seat. 40 mm f/2.8, focus follows the pane.
-  Direction says 50 mm; 40 mm fills the window and the quilted card the way
-  board-20 does. Open for QA.
+- `CAM_S2` interior, from the rear seat. 38 mm f/2.8, focus follows the pane.
+  Direction says 50 mm; 38 mm keeps the full window silhouette and the fan
+  stack in frame. Open for QA.
 - `CAM_S3` exterior, 85 mm f/2.8, slight high angle on the rear door.
 
 ## What is a stand-in

@@ -15,7 +15,8 @@ every change and the .blend stays out of git. What it makes:
     render/calibrate.py), iridescent PET, glossy hardcoat.
   * The teardown rig: RIG["teardown"] 0..1 lifts the pane into the cabin, turns it
     three-quarter and fans the plies along their normals. Every ply keeps the
-    silhouette because every ply is the same mesh outline.
+    silhouette because every ply is the same mesh outline. RIG["window"] 0..1
+    drops the pane in the door pocket for shot 3.
   * A stand-in set: door card with quilted leather and the amber strip, chrome
     handle, rubber and chrome window surrounds, headliner, seat, wet pavement and a
     river parapet outside, the Tower Bridge plate on a distant card, the night
@@ -155,6 +156,7 @@ def ply_mesh(name, thickness, outline, grid=0.02):
     side_start = 2 * len(faces)
     for i, p in enumerate(me.polygons):
         p.use_smooth = i < side_start
+        p.material_index = 0 if i < side_start else 1
     ring_set = set(ring)
     for e in me.edges:
         a, b = e.vertices
@@ -167,6 +169,27 @@ def ply_mesh(name, thickness, outline, grid=0.02):
     # seven silhouettes, so the bevel is the "teardown scale" on the edge.
     bev.width = min(0.00055, max(thickness * 0.3, 0.00025)); bev.segments = 3
     bev.limit_method = "ANGLE"; bev.angle_limit = math.radians(40); bev.use_clamp_overlap = True
+    return ob
+
+def ply_rim(name, outline, parent, mat):
+    """A 2 mm tube around the window silhouette, parented to a ply so it fans
+    with it. Side faces of a 1 mm sheet are sub-pixel; this is what actually
+    draws the seven arches."""
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = 0.00125
+    cu.bevel_resolution = 4
+    cu.fill_mode = "FULL"
+    sp = cu.splines.new("POLY")
+    sp.points.add(len(outline) - 1)
+    for pt, p in zip(sp.points, outline):
+        pos, _ = curve_point(p.x, p.y)
+        pt.co = (pos.x, pos.y, pos.z, 1.0)
+    sp.use_cyclic_u = True
+    sp.use_smooth = True
+    ob = bpy.data.objects.new(name, cu)
+    ob.data.materials.append(mat)
+    ob.parent = parent
     return ob
 
 def strip_mesh(name, inner, outer, y, smooth=True):
@@ -324,6 +347,25 @@ def mat_hardcoat(name):
     p = principled_transmission(nt, 1.50, 0.0, coat=1.0)
     shadow_transparent(nt, p.outputs[0], out); return m
 
+def mat_edge(name):
+    """Side faces of a ply. A quiet emission plus thin-film so the window
+    silhouette draws even when the face is a clear ghost. Used only on the
+    fanned plies; the assembled pane keeps a single glass material."""
+    m, nt, out = new_mat(name)
+    p = nt.nodes.new("ShaderNodeBsdfPrincipled"); p.location = (0, 0)
+    p.inputs["Base Color"].default_value = (0.72, 0.86, 1.0, 1)
+    p.inputs["Metallic"].default_value = 0.08
+    p.inputs["Roughness"].default_value = 0.06
+    p.inputs["Transmission Weight"].default_value = 0.65
+    p.inputs["IOR"].default_value = 1.52
+    p.inputs["Coat Weight"].default_value = 1.0
+    p.inputs["Coat Roughness"].default_value = 0.04
+    p.inputs["Thin Film Thickness"].default_value = 420.0
+    p.inputs["Thin Film IOR"].default_value = 1.38
+    p.inputs["Emission Color"].default_value = (0.50, 0.72, 1.0, 1)
+    p.inputs["Emission Strength"].default_value = 0.11
+    nt.links.new(p.outputs[0], out.inputs["Surface"]); return m
+
 def mat_leather(name, quilt=True):
     m, nt, out = new_mat(name)
     p = nt.nodes.new("ShaderNodeBsdfPrincipled"); p.location = (300, 0)
@@ -435,12 +477,13 @@ def build():
     C = {}
     for nm in ("Glass", "Rig", "Set", "Outside", "Lights", "Cameras"):
         C[nm] = bpy.data.collections.new(nm); sc.collection.children.link(C[nm])
+    C["Fan"] = bpy.data.collections.new("Fan")   # light-linking only, not in the scene
 
     # -- rig -----------------------------------------------------------------
     rig = bpy.data.objects.new("RIG", None); rig.empty_display_type = "PLAIN_AXES"
     rig.location = CENTRE; link(rig, C["Rig"])
     rig["teardown"] = 0.0; rig["vlt"] = 0.05; rig["clear_t"] = 0.9173
-    rig["fan_gap"] = 0.14; rig["fan_twist"] = 2.5; rig["lift"] = 0.30; rig["turn"] = 48.0
+    rig["fan_gap"] = 0.17; rig["fan_twist"] = 2.0; rig["lift"] = 0.28; rig["turn"] = 40.0
     rig["rim_t"] = 0.18; rig["window"] = 1.0; rig["fan_spread"] = 0.012
     for k, (lo, hi, desc) in {
         "teardown": (0, 1, "0 pane in the door, 1 fully exploded"),
@@ -461,6 +504,10 @@ def build():
     # detach: into the cabin (-Y), then turn toward three-quarter
     drive(stack, "location", 1, "CENTRE_Y - lift * min(max(teardown / 0.35, 0), 1)".replace("CENTRE_Y", f"{CENTRE.y:.4f}"), rig, ("teardown", "lift"))
     drive(stack, "location", 0, f"{CENTRE.x:.4f} + 0.08 * min(max(teardown / 0.35, 0), 1)", rig, ("teardown",))
+    # shot 3: drop the pane in the door pocket (between the inner card and the
+    # outer skin). Those two planes have no hole below the belt, so the glass
+    # disappears as it falls. Teardown leaves Z alone.
+    drive(stack, "location", 2, f"{CENTRE.z:.4f} - (1.0 - window) * {WIN_H * 0.96:.4f}", rig, ("window",))
     drive(stack, "rotation_euler", 2, "radians(turn) * min(max(teardown / 0.35, 0), 1)", rig, ("teardown", "turn"))
     drive(stack, "rotation_euler", 0, "radians(-6) * min(max(teardown / 0.35, 0), 1)", rig, ("teardown",))
 
@@ -475,6 +522,7 @@ def build():
         tr = t if kind in ("glass", "pvb") else max(t, FILM_FLOOR)
         thick.append(tr); total += tr
     mats["ceramic"] = mat_ceramic("Ceramic tint", thick[4], rig)
+    edge = mat_edge("Ply edge")
     # One solid for the assembled pane (teardown <= 0.3). Seven coincident solids
     # confuse Cycles' volume stack, and bonded layers have no air interfaces anyway.
     pane = ply_mesh("PANE assembled", total, outline)
@@ -483,13 +531,21 @@ def build():
     drive(pane, "hide_render", None, "teardown > 0.3", rig, ("teardown",))
     drive(pane, "hide_viewport", None, "teardown > 0.3", rig, ("teardown",))
     link(pane, C["Glass"])
-    y = total / 2
-    for i, ((nm, t, kind), tr) in enumerate(zip(PLIES, thick)):
-        yc = y - tr / 2; y -= tr
-        ob = ply_mesh(f"P{i} {nm}", tr, outline)
+    FAN_FLOOR = 0.0009
+    fan_thick = []
+    for (_, t, kind), tr in zip(PLIES, thick):
+        if kind in ("glass", "pvb", "ceramic"):
+            fan_thick.append(tr)
+        else:
+            fan_thick.append(max(t, FAN_FLOOR))
+    y = sum(fan_thick) / 2
+    for i, ((nm, t, kind), tr, tr_fan) in enumerate(zip(PLIES, thick, fan_thick)):
+        yc = y - tr_fan / 2; y -= tr_fan
+        ob = ply_mesh(f"P{i} {nm}", tr_fan, outline)
         ob.data.materials.append(mats[kind])
+        ob.data.materials.append(edge)
         ob.parent = stack
-        ob["ply_index"] = i; ob["thickness_real_m"] = t; ob["thickness_render_m"] = tr
+        ob["ply_index"] = i; ob["thickness_real_m"] = t; ob["thickness_render_m"] = tr_fan
         # fan: from the middle ply outward, along the normal, with a little twist
         # and a lateral cascade so the stack reads as seven silhouettes instead of
         # a single ghost when the camera is still roughly on the glass normal.
@@ -500,6 +556,12 @@ def build():
         drive(ob, "hide_viewport", None, "teardown <= 0.3", rig, ("teardown",))
         drive(ob, "rotation_euler", 2, f"radians(fan_twist) * ({i} - 3) * {amt}", rig, ("teardown", "fan_twist"))
         link(ob, C["Glass"])
+        C["Fan"].objects.link(ob)
+        rim = ply_rim(f"P{i} rim", outline, ob, edge)
+        drive(rim, "hide_render", None, "teardown <= 0.3", rig, ("teardown",))
+        drive(rim, "hide_viewport", None, "teardown <= 0.3", rig, ("teardown",))
+        link(rim, C["Glass"])
+        C["Fan"].objects.link(rim)
 
     # -- the door and cabin (stand-in until the car model arrives) -------------
     leather_q = mat_leather("Leather quilted"); leather = mat_leather("Leather", quilt=False)
@@ -621,6 +683,22 @@ def build():
     drive(rim, "location", 0, "-8 + 16 * rim_t", rig, ("rim_t",))
     drive(rim, "location", 1, "8.0 - 1.5 * rim_t", rig, ("rim_t",))
 
+    def light_only(emitter, receivers):
+        """Light linking: this lamp only shades `receivers`. Kickers can skim
+        the ply edges without washing the leather."""
+        ll = bpy.data.collections.new(f"LL {emitter.name}")
+        try:
+            ll.children.link(receivers)
+        except RuntimeError:
+            pass
+        emitter.light_linking.receiver_collection = ll
+
+    # Small, hard, glass-only. The previous un-linked kickers lit the cabin.
+    kicker = light("Edge kicker", "AREA", (0.10, -0.55, 1.38), 55, (0.62, 0.82, 1.0), size=0.06, aim=(0.50, -0.18, 1.14))
+    kicker_lo = light("Edge kicker low", "AREA", (0.92, -0.40, 0.96), 22, (1.0, 0.52, 0.18), size=0.05, aim=(0.50, -0.16, 1.08))
+    light_only(kicker, C["Fan"])
+    light_only(kicker_lo, C["Fan"])
+
     # -- cameras --------------------------------------------------------------------
     def camera(nm, loc, aim, lens, fstop, focus):
         cd = bpy.data.cameras.new(nm); cd.lens = lens; cd.sensor_width = 36
@@ -631,7 +709,7 @@ def build():
     # interior: from the rear seat, looking at the door. 40 mm (direction says
     # 50). Pulled back far enough that a 70° fan does not sit on the lens;
     # the full window silhouette stays in frame the way board-20 composed it.
-    s2 = camera("CAM_S2", (0.88, -1.28, 1.16), (0.48, 0.0, 1.12), 40, 2.8, 1.32)
+    s2 = camera("CAM_S2", (0.82, -1.52, 1.16), (0.50, 0.0, 1.12), 38, 2.8, 1.52)
     s2.data.dof.focus_object = stack
     s3 = camera("CAM_S3", (1.35, 3.9, 1.28), (0.50, 0.02, 1.14), 85, 2.8, 3.9)
     sc.camera = s2
