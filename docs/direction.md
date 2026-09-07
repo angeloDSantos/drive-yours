@@ -40,6 +40,7 @@ Configurator stills: final frame of shot 3 and the shot 2 resting frame, for 4 d
 
 These are the things that make it read as glass. They are not negotiable in look development.
 
+- **Every ply keeps the window's silhouette for the entire teardown.** The B-pillar edge, the roofline arch, the C-pillar sweep and the beltline are visible on every sheet at every frame. Nothing ever reads as a rectangle. In Blender the seven plies are cut from the door glass mesh itself, so this cannot drift.
 - Laminated door glass is **2.1 mm outer ply + 0.76 mm acoustic PVB + 1.6 mm inner ply**. Modelled as three solids, not one.
 - Film stack inward of the inner ply: **10 µm mounting adhesive, 36 µm PET nano-ceramic, 23 µm second PET ply, 4 µm hardcoat.** Real thicknesses, with a single "teardown scale" property that exaggerates them for the camera. The labels on the site quote the real numbers.
 - **Tint is absorption, not colour.** Volume absorption in the ceramic layer, density driven by a `vlt` property. Calibrated against a white card so a VLT 5 render transmits 5 % ± 1 %.
