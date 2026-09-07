@@ -1,0 +1,8 @@
+docs/previs/*.png
+render/bench.png
+render/out/
+render/env/*.hdr
+render/env/*.png
+render/scene.blend
+render/lookdev/*.exr
+render/scene.blend1
