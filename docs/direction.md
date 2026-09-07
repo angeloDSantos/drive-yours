@@ -25,14 +25,9 @@ Decision needed: **generic saloon** (safe, recommended) vs a **specific licensed
 
 ## The place
 
-London, on the Thames, at night. Every shot looks across the river at a skyline a Londoner recognises in one glance. The first storyboards used a generic harbour skyline; that is replaced. Candidate vantages, one to be chosen from the London plate sheet:
+**Shad Thames, decided 7 September 2026.** Every shot looks across the river at Tower Bridge lit white and blue, its two Gothic towers and high walkways, with the City cluster and the Shard behind. Plates: `docs/previs/london-11.webp` (cabin) and `london-21.webp` (kerb). The other three vantages on `london-sheet.jpg` (Bankside, South Bank, Rotherhithe) were reviewed and passed over.
 
-- **Bankside:** St Paul's dome and the City cluster (Gherkin, Cheesegrater, Walkie-Talkie, 22 Bishopsgate), Millennium Bridge.
-- **Shad Thames:** Tower Bridge lit white and blue, City cluster and the Shard behind.
-- **South Bank:** Palace of Westminster and Big Ben lit gold, Westminster Bridge.
-- **Rotherhithe:** Canary Wharf, One Canada Square and the glass towers.
-
-The same vantage is used for the Blender backdrop (a night HDRI shot on the Thames, or a matte-painted plate on a card behind the river) so the reflection in the glass and the view through it agree.
+The same vantage is used for the Blender backdrop (a night HDRI shot on the Thames, or a matte-painted Tower Bridge plate on a card behind the river) so the reflection in the glass and the view through it agree. The bridge's cool blue light is the fill colour in every shot; the amber strip inside is the only warm source.
 
 ## Shot list
 
@@ -112,7 +107,6 @@ Ten clips, each with a one-line note on what specifically sells the material.
 ## Open decisions
 
 - [ ] Generic saloon vs licensed model
-- [ ] London vantage (Bankside, Shad Thames, South Bank, Rotherhithe)
 - [ ] Display typeface: licensed (Söhne, Neue Haas Grotesk, ABC Diatype) vs Google Fonts (Archivo, Familjen Grotesk)
 - [ ] Domain name and host (Cloudflare Pages recommended)
 - [ ] Real contact email to replace `studio@driveyours.example`
